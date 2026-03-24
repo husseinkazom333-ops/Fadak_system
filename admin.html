@@ -1210,7 +1210,7 @@
                 pricingHtml += `
                 <tr class="hover:bg-blue-50/50 transition cursor-pointer" onclick="editProduct(${pr.id})" title="اضغط لتعديل هذا الجهاز">
                     <td class="p-4 border-l border-slate-100 font-black text-blue-700">${pr.name}</td>
-                    <td class="p-4 border-l border-slate-100 font-bold text-slate-500">${pr.brand || 'عام'}</td>
+                    <td class="p-4 border-l border-slate-100 font-bold text-slate-700">${pr.brand || 'عام'}</td>
                     <td class="p-4 border-l border-slate-100">${matCost.toLocaleString()}</td>
                     <td class="p-4 border-l border-slate-100">${mfgCost.toLocaleString()}</td>
                     <td class="p-4 border-l border-slate-100">${testCost.toLocaleString()}</td>
@@ -1694,7 +1694,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             else { o.total = actualNewTotal; o.cash_received = newCash; o.status = 'delivered'; }
             o.delivery_date = getNow();
             
-            closeFulfillmentModal(); await saveDataBulk([{key:'orders', data:orders}, {key:'agents', data:agents}, {key:'products', data:products}, {key:'stats', data:stats}]);
+            closeFulfillmentModal(); await saveDataBulk([{key:'orders', data:orders}, {key:'agents', data:agents}, {key:'products', data:products}, {key:'stats', data:stats}, {key:'payments', data:payments}]);
         }
 
         function openDirectPaymentModal() {
