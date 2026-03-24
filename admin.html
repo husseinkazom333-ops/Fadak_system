@@ -370,6 +370,7 @@
                         <h3 id="agentFormTitle" class="text-xl font-black text-blue-700 flex items-center gap-2">وكيل جديد</h3>
                         <input type="text" id="aName" placeholder="الاسم" class="w-full p-4 bg-slate-50 border rounded-xl font-bold" required>
                         <input type="text" id="aRegion" placeholder="المنطقة" class="w-full p-4 bg-slate-50 border rounded-xl font-bold" required>
+                        <input type="tel" id="aPhone" placeholder="رقم الهاتف (اختياري)" class="w-full p-4 bg-slate-50 border rounded-xl font-bold text-left" dir="ltr">
                         <input type="text" id="aCode" inputmode="numeric" pattern="[0-9]*" placeholder="الرمز السري (أرقام)" class="w-full bg-slate-50 border rounded-xl p-4 font-bold">
                         <div class="flex gap-2">
                             <button type="submit" class="w-full flex-1 bg-slate-800 text-white py-4 rounded-xl font-black flex items-center justify-center gap-2">حفظ</button>
@@ -384,6 +385,7 @@
                         <h3 id="empFormTitle" class="text-xl font-black text-blue-700 border-b border-slate-100 pb-3 flex items-center gap-2">إضافة موظف</h3>
                         <div class="space-y-3">
                             <input type="text" id="empName" placeholder="الاسم" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" required>
+                            <input type="tel" id="empPhone" placeholder="رقم الهاتف (اختياري)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-left" dir="ltr">
                             <input type="text" id="empUsername" placeholder="يوزر الدخول" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" required>
                             <input type="text" id="empPassword" placeholder="باسوورد" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" required>
                         </div>
@@ -972,6 +974,7 @@
                 id: editAgentId || Date.now(),
                 name: document.getElementById('aName').value,
                 region: document.getElementById('aRegion').value,
+                phone: document.getElementById('aPhone').value,
                 code: document.getElementById('aCode').value,
                 debt: editAgentId ? (agents.find(x=>x.id===editAgentId).debt || 0) : 0,
                 sales_count: editAgentId ? (agents.find(x=>x.id===editAgentId).sales_count || 0) : 0,
@@ -994,6 +997,7 @@
             let a = agents.find(x => x.id === id);
             document.getElementById('aName').value = a.name;
             document.getElementById('aRegion').value = a.region;
+            document.getElementById('aPhone').value = a.phone || '';
             document.getElementById('aCode').value = a.code || '';
             document.getElementById('agentFormTitle').innerText = 'تعديل بيانات الوكيل';
             document.getElementById('btnCancelAgent').classList.remove('hidden');
@@ -1117,6 +1121,7 @@
             let emp = { 
                 id: editEmpId || Date.now(), 
                 name: document.getElementById('empName').value, 
+                phone: document.getElementById('empPhone').value,
                 username: document.getElementById('empUsername').value, 
                 password: document.getElementById('empPassword').value, 
                 balance: editEmpId ? (employees.find(x=>x.id===editEmpId).balance || 0) : 0,
@@ -1146,7 +1151,7 @@
 
                 function editEmployee(id) { 
             editEmpId=id; let e=employees.find(x=>x.id===id); 
-            document.getElementById('empName').value=e.name; document.getElementById('empUsername').value=e.username; document.getElementById('empPassword').value=e.password; 
+            document.getElementById('empName').value=e.name; document.getElementById('empPhone').value=e.phone || ''; document.getElementById('empUsername').value=e.username; document.getElementById('empPassword').value=e.password; 
             let p = e.perms || {};
             document.getElementById('chk_dash').checked = !!p.dash; 
             document.getElementById('chk_prod_v').checked = !!p.prod_v; document.getElementById('chk_prod_a').checked = !!p.prod_a; document.getElementById('chk_prod_e').checked = !!p.prod_e; document.getElementById('chk_prod_d').checked = !!p.prod_d; 
@@ -1379,7 +1384,10 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
 
             document.getElementById('agentsList').innerHTML = agents.map(a => `
                 <tr class="hover:bg-slate-50 transition">
-                    <td class="p-4 font-bold text-slate-700 text-base">${a.name}</td>
+                    <td class="p-4 font-bold text-slate-700 text-base flex items-center justify-between gap-2">
+                        <span>${a.name}</span>
+                        ${a.phone ? `<a href="tel:${a.phone}" title="اتصال بالوكيل" class="bg-emerald-100 text-emerald-600 p-1.5 rounded-lg hover:bg-emerald-200 transition shadow-sm"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg></a>` : ''}
+                    </td>
                     <td class="p-4 text-rose-600 font-black text-xl">${(a.debt || 0).toLocaleString()}</td>
                     <td class="p-4 font-black text-sm text-slate-500">${a.sales_count || 0}</td>
                     <td class="p-4 text-center flex gap-2 justify-center" style="display:${(p.agt_e||p.agt_d)?'flex':'none'}">
