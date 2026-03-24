@@ -399,9 +399,27 @@
                 });
                 itemsHtml += `</tbody></table>`;
 
-                let statusBadge = isCompleted 
-                    ? `<span class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg> مكتملة</span>` 
-                    : `<span class="bg-orange-100 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> انتظار</span>`;
+                let statusBadge = '';
+                if (isCompleted) {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg> مكتملة</span>`;
+                } else {
+                    let isReady = true, isWorking = false, isTesting = false;
+                    o.items.forEach(i => {
+                        if (i.mfg_status !== 'tested') isReady = false;
+                        if (i.mfg_status === 'in_progress') isWorking = true;
+                        if (i.mfg_status === 'manufactured') { isWorking = true; isTesting = true; }
+                    });
+                    
+                    if (isReady && o.items.length > 0) {
+                        statusBadge = `<span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1">بانتظار التوصيل 🚚</span>`;
+                    } else if (isTesting) {
+                        statusBadge = `<span class="bg-purple-100 text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1">قيد الفحص 🔍</span>`;
+                    } else if (isWorking) {
+                        statusBadge = `<span class="bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1">قيد التصنيع ⚙️</span>`;
+                    } else {
+                        statusBadge = `<span class="bg-orange-100 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> قيد الانتظار</span>`;
+                    }
+                }
                 
                 let moneyHtml = `<div class="font-black text-slate-800 text-sm md:text-base">${o.total.toLocaleString()} د.ع</div>`;
                 let cashHtml = isCompleted ? `
