@@ -175,6 +175,7 @@
                             <thead class="bg-slate-800 text-white text-sm border-b">
                                 <tr>
                                     <th class="p-4 border-l border-slate-700">اسم الجهاز</th>
+                                    <th class="p-4 border-l border-slate-700 text-blue-300">العلامة التجارية</th>
                                     <th class="p-4 border-l border-slate-700">تكلفة المواد</th>
                                     <th class="p-4 border-l border-slate-700">أجر التصنيع</th>
                                     <th class="p-4 border-l border-slate-700">أجر الفحص</th>
@@ -370,7 +371,7 @@
                         <h3 id="agentFormTitle" class="text-xl font-black text-blue-700 flex items-center gap-2">وكيل جديد</h3>
                         <input type="text" id="aName" placeholder="الاسم" class="w-full p-4 bg-slate-50 border rounded-xl font-bold" required>
                         <input type="text" id="aRegion" placeholder="المنطقة" class="w-full p-4 bg-slate-50 border rounded-xl font-bold" required>
-                        <input type="tel" id="aPhone" placeholder="رقم الهاتف (اختياري)" class="w-full p-4 bg-slate-50 border rounded-xl font-bold text-left" dir="ltr">
+                        <input type="tel" id="aPhone" placeholder="رقم الهاتف (اختياري)" class="w-full p-4 bg-slate-50 border rounded-xl font-bold text-right" dir="rtl">
                         <input type="text" id="aCode" inputmode="numeric" pattern="[0-9]*" placeholder="الرمز السري (أرقام)" class="w-full bg-slate-50 border rounded-xl p-4 font-bold">
                         <div class="flex gap-2">
                             <button type="submit" class="w-full flex-1 bg-slate-800 text-white py-4 rounded-xl font-black flex items-center justify-center gap-2">حفظ</button>
@@ -385,7 +386,7 @@
                         <h3 id="empFormTitle" class="text-xl font-black text-blue-700 border-b border-slate-100 pb-3 flex items-center gap-2">إضافة موظف</h3>
                         <div class="space-y-3">
                             <input type="text" id="empName" placeholder="الاسم" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" required>
-                            <input type="tel" id="empPhone" placeholder="رقم الهاتف (اختياري)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-left" dir="ltr">
+                            <input type="tel" id="empPhone" placeholder="رقم الهاتف (اختياري)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-right" dir="rtl">
                             <input type="text" id="empUsername" placeholder="يوزر الدخول" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" required>
                             <input type="text" id="empPassword" placeholder="باسوورد" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" required>
                         </div>
@@ -1189,7 +1190,11 @@
             document.getElementById('statDebt').innerText = agents.reduce((s, a) => s + (a.debt || 0), 0).toLocaleString() + ' د.ع';
 
             let pricingHtml = '';
-            products.forEach(pr => {
+            
+            // --- الإضافة: ترتيب الأجهزة أبجدياً حسب الاسم لتجميع المتشابه ---
+            let sortedProducts = [...products].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+            
+            sortedProducts.forEach(pr => {
                 let matCost = 0;
                 if(pr.recipe && pr.recipe.length > 0) {
                     pr.recipe.forEach(r => { let raw = rawMaterials.find(x => String(x.id) === String(r.rawId)); if(raw) matCost += (raw.cost * r.qty); });
@@ -1205,6 +1210,7 @@
                 pricingHtml += `
                 <tr class="hover:bg-blue-50/50 transition cursor-pointer" onclick="editProduct(${pr.id})" title="اضغط لتعديل هذا الجهاز">
                     <td class="p-4 border-l border-slate-100 font-black text-blue-700">${pr.name}</td>
+                    <td class="p-4 border-l border-slate-100 font-bold text-slate-500">${pr.brand || 'عام'}</td>
                     <td class="p-4 border-l border-slate-100">${matCost.toLocaleString()}</td>
                     <td class="p-4 border-l border-slate-100">${mfgCost.toLocaleString()}</td>
                     <td class="p-4 border-l border-slate-100">${testCost.toLocaleString()}</td>
@@ -1216,7 +1222,8 @@
                 </tr>`;
             });
             let ptBody = document.getElementById('pricingTableBody');
-            if(ptBody) ptBody.innerHTML = pricingHtml || '<tr><td colspan="9" class="p-8 text-slate-400 font-bold text-center">لا توجد أجهزة مضافة حتى الآن.</td></tr>';
+            // غيرنا colspan الى 10 لأن ضفنا عمود جديد
+            if(ptBody) ptBody.innerHTML = pricingHtml || '<tr><td colspan="10" class="p-8 text-slate-400 font-bold text-center">لا توجد أجهزة مضافة حتى الآن.</td></tr>';
             
             let navPricing = document.getElementById('nav-pricing');
             if(navPricing) navPricing.style.display = (currentUser && currentUser.username === 'admin') ? 'flex' : 'none';
@@ -1411,7 +1418,23 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                 o.items.forEach(item => {
                     if (String(item.tech_id) === String(currentUser.id)) {
                         let reqQty = item.requested_qty || item.qty;
-                        if (item.mfg_status === 'in_progress') {
+                        if (item.mfg_status === 'assigned') {
+                            hasTasks = true;
+                            list.innerHTML += `
+                            <div class="bg-amber-50 border border-amber-200 p-5 rounded-2xl shadow-sm flex flex-col gap-3">
+                                <div class="flex gap-3 items-center">
+                                    <img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 bg-white p-0.5">
+                                    <div>
+                                        <h4 class="font-black text-amber-800 text-lg">${item.name}</h4>
+                                        <p class="text-xs font-bold text-amber-600">العدد المطلوب: <span class="text-rose-500">${reqQty}</span></p>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-amber-100 text-center">
+                                    <p class="font-black text-amber-600 text-sm">تمت إحالة الطلب لك 🔔</p>
+                                    <p class="font-bold text-slate-500 text-xs mt-1">يرجى التوجه للمخزن لاستلام المواد للبدء بالتصنيع.</p>
+                                </div>
+                            </div>`;
+                        } else if (item.mfg_status === 'in_progress') {
                             hasTasks = true;
                             let earn = (item.mfg_fee || 0) * reqQty;
                             list.innerHTML += `
