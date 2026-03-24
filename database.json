@@ -1,0 +1,11 @@
+{
+    "products": [],
+    "agents": [],
+    "orders": [],
+    "returns": [],
+    "stats": {
+        "sales": 0,
+        "cash": 0,
+        "completed": 0
+    }
+}

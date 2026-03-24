@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>النظام المتكامل | شركة فدك</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
+        .scroll-touch { -webkit-overflow-scrolling: touch; }
+        .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 1.5rem); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .sidebar-closed { transform: translateX(100%); } 
+        @media (min-width: 768px) { .sidebar-closed { transform: translateX(0); } }
+        .spinner { border: 3px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 3px solid white; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .toast-enter { animation: slideIn 0.3s ease-out forwards; } @keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .section-content { animation: fadeIn 0.4s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .perm-checkbox, .perm-sub-checkbox { width: 1.2rem; height: 1.2rem; cursor: pointer; accent-color: #2563eb; }
+        .icon-svg { width: 1.35rem; height: 1.35rem; stroke-width: 1.8; }
+        .icon-sm { width: 1.1rem; height: 1.1rem; stroke-width: 2; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-[100dvh] overflow-hidden text-slate-800 w-full">
+
+    <div id="toast-container" class="fixed bottom-10 left-4 z-[100] flex flex-col gap-2 pointer-events-none safe-bottom"></div>
+
+    <div id="globalLoader" class="fixed inset-0 bg-slate-900/50 z-[90] hidden flex items-center justify-center backdrop-blur-sm"><div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-3 border-b-4 border-blue-600"><div class="spinner !border-blue-200 !border-top-blue-600 !w-10 !h-10"></div><p class="font-bold text-slate-600">جاري المعالجة والمزامنة...</p></div></div>
+
+    <div id="adminLoginScreen" class="fixed inset-0 bg-slate-900 z-[80] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 md:p-10 max-w-sm w-full shadow-2xl text-center border-t-8 border-blue-600">
+            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+            </div>
+            <h2 class="text-3xl font-black mb-2 text-slate-800">شركة فدك</h2>
+            <p class="text-sm font-bold text-slate-400 mb-6">بوابة الإدارة والموظفين</p>
+            <input type="text" id="loginUsername" placeholder="اسم المستخدم" class="w-full bg-slate-50 border border-slate-200 text-center text-lg p-4 rounded-xl focus:outline-none focus:border-blue-500 mb-4 font-bold">
+            <input type="password" id="loginPassword" placeholder="كلمة المرور" class="w-full bg-slate-50 border border-slate-200 text-center text-lg p-4 rounded-xl focus:outline-none focus:border-blue-500 mb-6 font-bold" onkeypress="if(event.key === 'Enter') employeeLogin()">
+            <button onclick="employeeLogin()" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-lg transition shadow-lg">دخول للنظام</button>
+        </div>
+    </div>
+
+    <div id="adminApp" class="hidden flex flex-col md:flex-row h-[100dvh] w-full">
+        <div class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center z-30 flex-shrink-0 shadow-md">
+            <h1 class="font-black text-xl">شركة فدك</h1>
+            <button onclick="toggleSidebar()" class="text-white hover:text-blue-400 transition p-1">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+            </button>
+        </div>
+
+        <aside id="sidebar" class="sidebar-closed absolute md:relative w-72 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-40 h-full transition-transform flex-shrink-0">
+            <div class="p-8 border-b border-slate-800 flex flex-col gap-2">
+                <h1 class="text-2xl font-black text-white uppercase tracking-widest">شركة فدك</h1>
+                <p id="currentUserRoleDisplay" class="text-xs text-blue-400 font-bold bg-blue-400/10 w-fit px-2.5 py-1 rounded-md mt-1 border border-blue-500/20">مدير النظام</p>
+            </div>
+            <nav class="flex-grow p-4 space-y-1 overflow-y-auto scroll-touch safe-bottom mt-2" id="sidebarNav">
+                <button id="nav-dashboard" onclick="switchTab('dashboard')" class="tab-btn active-tab w-full flex items-center gap-3 bg-blue-600 text-white p-4 rounded-xl font-bold transition shadow-md" data-tab="dashboard">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" /></svg>
+                    الإحصائيات
+                </button>
+                <button id="nav-settings" onclick="switchTab('settings')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="settings">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    إعدادات التسعير
+                </button>
+                <button id="nav-pricing" onclick="switchTab('pricing')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="pricing">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    التسعير الذكي
+                </button>
+
+
+
+                <button id="nav-addProduct" onclick="switchTab('addProduct')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="addProduct">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    إضافة جهاز
+                </button>
+                <button id="nav-rawMaterials" onclick="switchTab('rawMaterials')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="rawMaterials">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
+                    المواد الأولية (التصنيع)
+                </button>
+                <button id="nav-inventory" onclick="switchTab('inventory')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="inventory">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>
+                    المخزن
+                </button>
+                <button id="nav-orders" onclick="switchTab('orders')" class="tab-btn w-full flex items-center justify-between hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="orders">
+                    <div class="flex items-center gap-3">
+                        <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
+                        الطلبيات والتجهيز
+                    </div>
+                    <span id="ordersBadge" class="bg-rose-500 text-white text-xs px-2.5 py-0.5 rounded-full hidden font-black shadow-sm">0</span>
+                </button>
+                <button id="nav-returns" onclick="switchTab('returns')" class="tab-btn w-full flex items-center justify-between hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="returns">
+                    <div class="flex items-center gap-3">
+                        <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                        المرتجعات
+                    </div>
+                    <span id="returnsBadge" class="bg-orange-500 text-white text-xs px-2.5 py-0.5 rounded-full hidden font-black shadow-sm">0</span>
+                </button>
+                <button id="nav-payments" onclick="switchTab('payments')" class="tab-btn w-full flex items-center justify-between hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="payments">
+                    <div class="flex items-center gap-3">
+                        <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" /></svg>
+                        التسديدات
+                    </div>
+                    <span id="paymentsBadge" class="bg-emerald-500 text-white text-xs px-2.5 py-0.5 rounded-full hidden font-black shadow-sm">0</span>
+                </button>
+                <button id="nav-expenses" onclick="switchTab('expenses')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="expenses">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181" /></svg>
+                    المصروفات
+                </button>
+                <button id="nav-agents" onclick="switchTab('agents')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="agents">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                    الوكلاء
+                </button>
+                <button id="nav-employees" onclick="switchTab('employees')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="employees">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" /></svg>
+                    الموظفين
+                </button>
+                <button id="nav-myTasks" onclick="switchTab('myTasks')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="myTasks">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                    مهامي (التصنيع)
+                </button>
+            </nav>
+        </aside>
+
+        <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+        <main id="mainScrollArea" class="flex-grow flex flex-col h-full overflow-y-auto overflow-x-hidden scroll-touch bg-slate-50 relative z-10 min-h-0">
+            <header class="bg-white/90 backdrop-blur-md sticky top-0 z-20 px-6 md:px-8 py-5 flex justify-between items-center border-b border-slate-200">
+                <h2 id="pageTitle" class="text-xl md:text-2xl font-black text-slate-800">الرئيسية</h2>
+                <div class="flex items-center gap-4">
+                    <span id="headerUserName" class="hidden md:block font-bold text-slate-500 text-sm"></span>
+                    <button onclick="logoutAdmin()" class="bg-white text-slate-600 px-4 md:px-6 py-2.5 rounded-xl font-bold border border-slate-200 hover:bg-rose-50 hover:text-rose-600 transition shadow-sm text-sm flex items-center gap-2">
+                        <svg class="icon-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                        خروج
+                    </button>
+                </div>
+            </header>
+
+            <div class="p-4 md:p-10 pb-32 safe-bottom w-full max-w-full">
+                
+                <div id="dashboardSection" class="section-content space-y-6 md:space-y-8 w-full">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-b-4 border-blue-500 relative overflow-hidden">
+                            <p class="text-xs font-bold text-slate-400 mb-2 uppercase relative z-10">المبيعات المجهزة</p>
+                            <h3 class="text-2xl md:text-3xl font-black text-slate-800 relative z-10" id="statSales">0 د.ع</h3>
+                        </div>
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-b-4 border-rose-500 relative overflow-hidden">
+                            <p class="text-xs font-bold text-slate-400 mb-2 uppercase relative z-10">إجمالي المصاريف</p>
+                            <h3 class="text-2xl md:text-3xl font-black text-rose-600 relative z-10" id="statExp">0 د.ع</h3>
+                        </div>
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-b-4 border-emerald-500 relative overflow-hidden">
+                            <p class="text-xs font-bold text-slate-400 mb-2 uppercase relative z-10">النقد (في الصندوق)</p>
+                            <h3 class="text-2xl md:text-3xl font-black text-emerald-600 relative z-10" id="statProfit">0 د.ع</h3>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between">
+                            <div><p class="text-sm font-bold text-slate-500">ديون الوكلاء المتبقية:</p><h3 class="text-3xl md:text-4xl font-black text-rose-500 mt-2" id="statDebt">0 د.ع</h3></div>
+                        </div>
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-center">
+                            <div class="w-48 h-48 relative"><canvas id="mainChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pricingSection" class="section-content hidden w-full">
+                    <div class="bg-white rounded-3xl shadow-sm border overflow-x-auto scroll-touch">
+                        <table class="w-full text-center min-w-[1000px]">
+                            <thead class="bg-slate-800 text-white text-sm border-b">
+                                <tr>
+                                    <th class="p-4 border-l border-slate-700">اسم الجهاز</th>
+                                    <th class="p-4 border-l border-slate-700">تكلفة المواد</th>
+                                    <th class="p-4 border-l border-slate-700">أجر التصنيع</th>
+                                    <th class="p-4 border-l border-slate-700">أجر الفحص</th>
+                                    <th class="p-4 border-l border-slate-700">التسويق</th>
+                                    <th class="p-4 border-l border-slate-700">عمولة النقل</th>
+                                    <th class="p-4 border-l border-slate-700 bg-rose-600">التكلفة الكلية</th>
+                                    <th class="p-4 border-l border-slate-700 bg-emerald-600">البيع المقترح</th>
+                                    <th class="p-4 bg-blue-600">مقدار الربح</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pricingTableBody" class="divide-y divide-slate-100 text-sm font-bold text-slate-700">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+                <div id="settingsSection" class="section-content hidden max-w-3xl mx-auto w-full">
+                    <form id="settingsForm" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm space-y-6 border border-slate-100">
+                        <div class="border-b border-slate-100 pb-4 mb-4">
+                            <h3 class="text-2xl font-black text-slate-800 flex items-center gap-2">⚙️ إعدادات التسعير والنسب</h3>
+                            <p class="text-sm font-bold text-slate-500 mt-2">تغيير هذه النسب سيؤثر فوراً على حسابات تكلفة وتسعير جميع الأجهزة.</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-black text-slate-700 mb-2">نسبة أجور التسويق (%)</label>
+                                <div class="relative"><input type="number" id="setMarketing" step="0.1" inputmode="decimal" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-blue-700 text-xl outline-none focus:border-blue-500 text-center" placeholder="مثال: 5"><span class="absolute left-4 top-4 text-slate-400 font-black">%</span></div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-black text-slate-700 mb-2">نسبة عمولة النقل (%)</label>
+                                <div class="relative"><input type="number" id="setTransport" step="0.1" inputmode="decimal" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-emerald-700 text-xl outline-none focus:border-emerald-500 text-center" placeholder="مثال: 2"><span class="absolute left-4 top-4 text-slate-400 font-black">%</span></div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-black text-slate-700 mb-2">هامش الربح المطلوب (%)</label>
+                                <div class="relative"><input type="number" id="setProfit" step="0.1" inputmode="decimal" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-black text-rose-700 text-xl outline-none focus:border-rose-500 text-center" placeholder="مثال: 25"><span class="absolute left-4 top-4 text-slate-400 font-black">%</span></div>
+                            </div>
+                        </div>
+                        <div class="pt-4 border-t border-slate-100">
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-xl font-black text-lg shadow-lg transition flex items-center justify-center gap-2">حفظ الإعدادات وتحديث الأسعار</button>
+                        </div>
+                    </form>
+                </div>
+
+
+                <div id="addProductSection" class="section-content hidden max-w-3xl mx-auto w-full">
+                    <form id="addProductForm" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm space-y-4 border">
+                        <h3 id="formTitle" class="text-2xl font-black text-blue-700 mb-4 flex items-center gap-2">إضافة جهاز جديد</h3>
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <input type="text" id="pName" placeholder="اسم الجهاز" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none" required>
+                            <input type="text" id="pBrand" list="brandsList" placeholder="العلامة التجارية" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none" required autocomplete="off">
+                            <datalist id="brandsList"></datalist>
+                        </div>
+                        
+                        <select id="pOwner" onchange="toggleCustomPriceSection()" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none text-slate-700 cursor-pointer focus:border-blue-500">
+                            <option value="general" class="font-black text-blue-600">🏢 شركة فدك (عام)</option>
+                        </select>
+                        
+                        <div id="customPricesSection" class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 mt-4 transition-all hidden">
+                            <h4 class="font-bold text-blue-700 mb-3 text-sm flex items-center gap-2">أسعار خاصة للوكلاء</h4>
+                            <div class="flex gap-2 mb-2">
+                                <select id="cpAgent" class="w-1/2 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none text-slate-700"></select>
+                                <input type="number" id="cpPrice" inputmode="numeric" pattern="[0-9]*" placeholder="السعر الخاص" class="w-1/2 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none">
+                                <button type="button" onclick="addCustomPrice()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-xl font-black transition shadow-sm">+</button>
+                            </div>
+                            <ul id="customPricesList" class="space-y-2 mt-3 empty:hidden"></ul>
+                        </div>
+                        
+                                               <div class="flex flex-col md:flex-row gap-4">
+                            <input type="number" id="pPrice" inputmode="numeric" pattern="[0-9]*" placeholder="السعر العام" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none" required>
+                            <input type="number" id="pTarget" inputmode="numeric" pattern="[0-9]*" placeholder="تارجت مبيعات الجهاز (اختياري)" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none">
+                        </div>
+
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <input type="number" id="pMfgFee" inputmode="numeric" pattern="[0-9]*" placeholder="أجر التصنيع الثابت (للقطعة)" class="w-full p-4 bg-indigo-50 border border-indigo-200 rounded-xl font-bold outline-none text-indigo-700 placeholder-indigo-400 focus:border-indigo-500" required>
+                            <input type="number" id="pTestFee" inputmode="numeric" pattern="[0-9]*" placeholder="أجر الفحص الثابت (للقطعة)" class="w-full p-4 bg-emerald-50 border border-emerald-200 rounded-xl font-bold outline-none text-emerald-700 placeholder-emerald-400 focus:border-emerald-500" required>
+                        </div>
+                        
+                        <textarea id="pDesc" rows="3" placeholder="مواصفات الجهاز..." class="w-full bg-slate-50 border rounded-xl p-4 font-bold outline-none"></textarea>
+
+                        
+                        <div id="recipeSection" class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mt-4 transition-all">
+                            <h4 class="font-bold text-indigo-700 mb-3 text-sm flex items-center gap-2">المواد الأولية لصنع هذا الجهاز (خصم تلقائي)</h4>
+                            <div class="flex gap-2 mb-2">
+                                <select id="recipeRaw" class="w-1/2 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none text-slate-700"></select>
+                                <input type="number" id="recipeQty" inputmode="numeric" pattern="[0-9]*" placeholder="الكمية للقطعة الواحدة" class="w-1/2 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none">
+                                <button type="button" onclick="addRecipeItem()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 rounded-xl font-black transition shadow-sm">+</button>
+                            </div>
+                            <ul id="recipeList" class="space-y-2 mt-3 empty:hidden"></ul>
+                        </div>
+
+                        <input type="file" id="pFile" class="hidden" accept="image/*" onchange="compressImg(event)">
+                        <label for="pFile" id="pFileLabel" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 text-blue-600 font-bold cursor-pointer transition hover:bg-blue-100 gap-2">
+                            <span>اختر صورة للجهاز</span>
+                        </label>
+                        <div id="imgPreviewContainer" class="hidden mt-2"><img id="imgPreview" class="h-48 mx-auto rounded-2xl object-contain border shadow-sm bg-white p-2"></div>
+                        
+                        <div class="flex gap-2 pt-4">
+                            <button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">حفظ بالمخزن</button>
+                            <button type="button" onclick="cancelEdit()" id="btnCancelEdit" class="hidden flex-1 bg-slate-200 text-slate-700 py-4 rounded-xl font-black text-lg transition hover:bg-slate-300">إلغاء</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="rawMaterialsSection" class="section-content hidden w-full">
+                    <form id="addRawForm" class="bg-white p-6 rounded-3xl shadow-sm border mb-6 flex flex-col md:flex-row gap-4 items-end">
+                        <div class="flex-1 w-full"><label class="block text-xs font-black text-slate-400 mb-1">اسم المادة الأولية</label><input type="text" id="rawName" placeholder="مثال: بورد، شاشة، كارت..." class="w-full p-3 bg-slate-50 border rounded-xl font-bold" required></div>
+                        <div class="w-full md:w-48"><label class="block text-xs font-black text-slate-400 mb-1">التكلفة (للقطعة)</label><input type="number" id="rawCost" inputmode="numeric" pattern="[0-9]*" placeholder="د.ع" class="w-full p-3 bg-slate-50 border rounded-xl font-bold" required></div>
+                        <div class="w-full md:w-32"><label class="block text-xs font-black text-slate-400 mb-1">الرصيد الافتتاحي</label><input type="number" id="rawQty" inputmode="numeric" pattern="[0-9]*" value="0" class="w-full p-3 bg-slate-50 border rounded-xl font-bold" required></div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button type="submit" id="btnSubmitRaw" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-black transition flex items-center justify-center gap-2">إضافة</button>
+                            <button type="button" id="btnCancelRaw" onclick="cancelRawEdit()" class="hidden flex-1 md:flex-none bg-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-black transition">إلغاء</button>
+                        </div>
+                    </form>
+                    <div class="bg-white rounded-3xl shadow-sm border overflow-x-auto scroll-touch">
+                        <table class="w-full text-right min-w-[600px]">
+                            <thead class="bg-slate-50 text-slate-500 text-sm border-b">
+                                <tr><th class="p-4">اسم المادة</th><th class="p-4 text-center">التكلفة للقطعة</th><th class="p-4 text-center font-black text-blue-600">الكمية في المخزن</th><th class="p-4 text-center">إجراء</th></tr>
+                            </thead>
+                            <tbody id="rawMaterialsList" class="divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="inventorySection" class="section-content hidden w-full">
+                    <div class="bg-white rounded-3xl shadow-sm border overflow-x-auto scroll-touch">
+                        <table class="w-full text-right min-w-[700px]">
+                            <thead class="bg-slate-50 text-slate-500 text-sm border-b">
+                                <tr><th class="p-4">الجهاز والمالك</th><th class="p-4">التاريخ</th><th class="p-4 text-center">السعر والتارجت</th><th class="p-4 text-center">الرئيسي</th><th class="p-4 text-center text-rose-600">المرتجع</th><th class="p-4 text-center" id="col_prod_actions">إجراء</th></tr>
+                            </thead>
+                            <tbody id="adminProductsList" class="divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="ordersSection" class="section-content hidden w-full">
+                    <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6">
+                        <div class="flex flex-wrap gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto max-w-full scroll-touch">
+                            <button onclick="switchOrderTab('pending')" id="tabPendingOrders" class="px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-blue-600 text-white text-xs md:text-sm whitespace-nowrap flex items-center gap-1.5">قيد الانتظار</button>
+                            <button onclick="switchOrderTab('completed')" id="tabCompletedOrders" class="px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-transparent text-slate-600 hover:bg-slate-100 text-xs md:text-sm whitespace-nowrap flex items-center gap-1.5">سجل المكتملة</button>
+                            <button onclick="switchOrderTab('missing')" id="tabMissingOrders" class="px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-transparent text-slate-600 hover:bg-slate-100 text-xs md:text-sm whitespace-nowrap flex items-center gap-1.5">النواقص</button>
+                        </div>
+                        <div class="w-full md:w-80 relative">
+                            <input type="text" id="orderSearchInput" onkeyup="filterOrders()" placeholder="بحث باسم، رقم، أو تاريخ..." class="w-full bg-white border border-slate-200 p-3 pr-10 rounded-xl font-bold text-sm focus:outline-none focus:border-blue-500 shadow-sm transition">
+                        </div>
+                    </div>
+                    
+                    <div id="pendingOrdersContainer" class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full"><div class="overflow-x-auto scroll-touch"><table class="w-full text-right min-w-[700px]"><thead class="bg-blue-50 text-blue-700 text-sm border-b border-blue-100"><tr><th class="p-4 w-1/4">الطلب والوكيل</th><th class="p-4 w-1/4">التاريخ</th><th class="p-4 w-1/4">المواد المطلوبة</th><th class="p-4 text-center">الإجمالي</th><th class="p-4 text-center">إجراء</th></tr></thead><tbody id="pendingOrdersTbody" class="divide-y divide-slate-100"></tbody></table></div></div>
+                    <div id="completedOrdersContainer" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full"><div class="overflow-x-auto scroll-touch"><table class="w-full text-right min-w-[800px]"><thead class="bg-emerald-50 text-emerald-700 text-sm border-b border-emerald-100"><tr><th class="p-4">الفاتورة والوكيل</th><th class="p-4">تاريخ التسليم</th><th class="p-4">المواد المجهزة فعلياً</th><th class="p-4 text-center">الصافي والمقبوض</th><th class="p-4 text-center">الحالة</th></tr></thead><tbody id="completedOrdersTbody" class="divide-y divide-slate-100"></tbody></table></div></div>
+                    <div id="missingOrdersContainer" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full"><div class="overflow-x-auto scroll-touch"><table class="w-full text-right min-w-[800px]"><thead class="bg-rose-50 text-rose-700 text-sm border-b border-rose-100"><tr><th class="p-4">الطلبية والوكيل</th><th class="p-4">تاريخ الطلب الأصلي</th><th class="p-4">المواد الناقصة</th><th class="p-4 text-center">إجراء</th></tr></thead><tbody id="missingOrdersTbody" class="divide-y divide-slate-100"></tbody></table></div></div>
+                </div>
+
+                <div id="returnsSection" class="section-content hidden space-y-4 max-w-4xl mx-auto w-full"><div id="returnsContainer"></div></div>
+                
+                <div id="paymentsSection" class="section-content hidden space-y-4 w-full">
+                    <div class="flex flex-wrap gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 w-full md:w-fit justify-between md:justify-start">
+                        <div class="flex gap-2">
+                            <button onclick="switchPaymentTab('pending')" id="tabPendingPay" class="px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-blue-600 text-white text-xs md:text-sm flex items-center gap-1.5">طلبات التسديد</button>
+                            <button onclick="switchPaymentTab('history')" id="tabHistoryPay" class="px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-transparent text-slate-600 hover:bg-slate-100 text-xs md:text-sm flex items-center gap-1.5">سجل التسديدات</button>
+                        </div>
+                        <button onclick="openDirectPaymentModal()" class="px-4 py-2.5 rounded-xl font-black transition bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm flex items-center gap-1.5 shadow-sm ml-auto">
+                            + استلام دفعة من وكيل
+                        </button>
+                    </div>
+                    <div id="pendingPaymentsWrapper" class="w-full"><div id="paymentsContainer" class="space-y-4 w-full max-w-4xl mx-auto"></div></div>
+                    <div id="historyPaymentsWrapper" class="hidden w-full">
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full">
+                            <div class="overflow-x-auto scroll-touch">
+                                <table class="w-full text-right min-w-[800px]">
+                                    <thead class="bg-emerald-50 text-emerald-700 text-sm border-b border-emerald-100">
+                                        <tr><th class="p-4">الوكيل</th><th class="p-4 text-center">المبلغ</th><th class="p-4">تاريخ الرفع</th><th class="p-4">تاريخ الموافقة</th><th class="p-4">الملاحظة</th><th class="p-4 text-center">المستلم (الموظف)</th></tr>
+                                    </thead>
+                                    <tbody id="historyPaymentsTbody" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="expensesSection" class="section-content hidden space-y-6 w-full">
+                    <form id="addExpenseForm" class="bg-white p-6 rounded-3xl shadow-sm border flex flex-col md:flex-row gap-4 items-end">
+                        <div class="flex-1 w-full"><label class="block text-xs font-black text-slate-400 mb-1">البيان</label><input type="text" id="expNote" class="w-full p-3 bg-slate-50 border rounded-xl font-bold" required></div>
+                        <div class="w-full md:w-48"><label class="block text-xs font-black text-slate-400 mb-1">المبلغ</label><input type="number" id="expAmt" inputmode="numeric" pattern="[0-9]*" class="w-full p-3 bg-slate-50 border rounded-xl font-bold" required></div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button type="submit" id="btnSubmitExpense" class="flex-1 md:flex-none bg-rose-600 hover:bg-rose-700 text-white px-8 py-3.5 rounded-xl font-black transition flex items-center justify-center gap-2">إضافة</button>
+                            <button type="button" id="btnCancelExpense" onclick="cancelExpenseEdit()" class="hidden flex-1 md:flex-none bg-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-black transition">إلغاء</button>
+                        </div>
+                    </form>
+                    <div class="bg-white rounded-3xl border overflow-hidden overflow-x-auto scroll-touch"><table class="w-full text-right min-w-[500px]"><thead class="bg-slate-50 text-xs border-b"><tr><th class="p-4">البيان</th><th class="p-4">المبلغ</th><th class="p-4">التاريخ</th><th class="p-4 text-center" id="col_exp_actions">إجراء</th></tr></thead><tbody id="expensesList" class="divide-y divide-slate-100"></tbody></table></div>
+                </div>
+                
+                <div id="agentsSection" class="section-content hidden flex flex-col md:flex-row gap-6 w-full">
+                    <form id="addAgentForm" class="w-full md:w-1/3 bg-white p-6 rounded-3xl shadow-sm border space-y-4 h-fit">
+                        <h3 id="agentFormTitle" class="text-xl font-black text-blue-700 flex items-center gap-2">وكيل جديد</h3>
+                        <input type="text" id="aName" placeholder="الاسم" class="w-full p-4 bg-slate-50 border rounded-xl font-bold" required>
+                        <input type="text" id="aRegion" placeholder="المنطقة" class="w-full p-4 bg-slate-50 border rounded-xl font-bold" required>
+                        <input type="text" id="aCode" inputmode="numeric" pattern="[0-9]*" placeholder="الرمز السري (أرقام)" class="w-full bg-slate-50 border rounded-xl p-4 font-bold">
+                        <div class="flex gap-2">
+                            <button type="submit" class="w-full flex-1 bg-slate-800 text-white py-4 rounded-xl font-black flex items-center justify-center gap-2">حفظ</button>
+                            <button type="button" onclick="cancelAgentEdit()" id="btnCancelAgent" class="hidden flex-1 bg-slate-200 text-slate-700 py-4 rounded-xl font-black">إلغاء</button>
+                        </div>
+                    </form>
+                    <div class="w-full md:w-2/3 bg-white rounded-3xl shadow-sm border overflow-x-auto scroll-touch"><table class="w-full text-right min-w-[500px]"><thead class="bg-slate-50 text-sm border-b"><tr><th class="p-4">الاسم</th><th class="p-4">الديون</th><th class="p-4">المبيعات</th><th class="p-4 text-center" id="col_agt_actions">إجراء</th></tr></thead><tbody id="agentsList" class="divide-y divide-slate-100"></tbody></table></div>
+                </div>
+                
+                <div id="employeesSection" class="section-content hidden flex flex-col md:flex-row gap-6 w-full">
+                    <form id="addEmployeeForm" class="w-full md:w-1/3 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4 h-fit">
+                        <h3 id="empFormTitle" class="text-xl font-black text-blue-700 border-b border-slate-100 pb-3 flex items-center gap-2">إضافة موظف</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="empName" placeholder="الاسم" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" required>
+                            <input type="text" id="empUsername" placeholder="يوزر الدخول" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" required>
+                            <input type="text" id="empPassword" placeholder="باسوورد" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" required>
+                        </div>
+                        <div class="pt-2">
+                            <button type="button" onclick="openPermModal()" class="w-full bg-slate-100 hover:bg-blue-50 text-blue-700 border border-blue-200 py-3 rounded-xl font-black flex items-center justify-center gap-2 transition shadow-sm">
+                                تحديد الصلاحيات بدقة
+                            </button>
+                        </div>
+                        <div class="flex gap-2 pt-4 border-t border-slate-100">
+                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black shadow-md transition flex items-center justify-center gap-2">حفظ</button>
+                            <button type="button" onclick="cancelEmpEdit()" id="btnCancelEmp" class="hidden flex-1 bg-slate-200 text-slate-700 py-4 rounded-xl font-black transition">إلغاء</button>
+                        </div>
+                    </form>
+                    <div class="w-full md:w-2/3 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-x-auto scroll-touch">
+                        <table class="w-full text-right min-w-[600px]">
+                            <thead class="bg-slate-50 text-sm border-b">
+                                <tr><th class="p-4">الموظف</th><th class="p-4">اليوزر</th><th class="p-4 text-center">الرصيد/الأجور</th><th class="p-4 text-center" id="col_emp_actions">إجراء</th></tr>
+                            </thead>
+                            <tbody id="employeesList" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="myTasksSection" class="section-content hidden space-y-6 w-full">
+                    <div class="bg-indigo-50 border border-indigo-200 p-6 rounded-2xl shadow-sm flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-black text-indigo-800">أهلاً بك في ورشة العمل</h3>
+                            <p class="text-sm font-bold text-indigo-600 mt-1">رصيد أجورك الحالي: <span id="techBalanceDisplay" class="text-2xl font-black">0</span> د.ع</p>
+                        </div>
+                    </div>
+                    <div id="myTasksList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="addPaymentModal" class="fixed inset-0 bg-slate-900/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 border-t-8 border-emerald-500 animate-[slideIn_0.3s_ease-out]">
+            <h3 class="text-xl font-black text-slate-800 mb-4 text-center">تسجيل استلام دفعة</h3>
+            <select id="newPayAgent" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none mb-3"></select>
+            <input type="number" id="newPayAmt" inputmode="numeric" pattern="[0-9]*" placeholder="المبلغ المستلم (د.ع)" class="w-full p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-black text-xl outline-none mb-3 text-center placeholder-emerald-300">
+            <input type="text" id="newPayNote" placeholder="ملاحظة (اختياري)" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none mb-6 text-center">
+            <div class="flex gap-3">
+                <button type="button" onclick="submitDirectPayment()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-black shadow-lg transition">تأكيد التسجيل</button>
+                <button type="button" onclick="document.getElementById('addPaymentModal').classList.add('hidden')" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 rounded-xl font-black transition">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="assignTechModal" class="fixed inset-0 bg-slate-900/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 border-t-8 border-indigo-500 animate-[slideIn_0.3s_ease-out]">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <h3 class="text-xl font-black text-indigo-700 flex items-center gap-2">إحالة للتصنيع</h3>
+                <button onclick="closeAssignModal()" class="text-3xl text-slate-400 hover:text-rose-500 transition font-black">✕</button>
+            </div>
+            <p id="assignItemName" class="text-sm font-bold text-slate-600 mb-4 text-center bg-slate-50 p-2 rounded-lg"></p>
+            <input type="hidden" id="assignOrderId">
+            <input type="hidden" id="assignItemId">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-black text-slate-500 mb-1">اختر الصانع (الفني):</label>
+                    <select id="assignTechSelect" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500"></select>
+                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-black text-slate-500 mb-1">أجر التصنيع (تلقائي):</label>
+                        <input type="number" id="assignMfgFee" class="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl font-black text-center text-indigo-600 outline-none cursor-not-allowed" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-500 mb-1">أجر الفحص (تلقائي):</label>
+                        <input type="number" id="assignTestFee" class="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl font-black text-center text-emerald-600 outline-none cursor-not-allowed" readonly>
+                    </div>
+                </div>
+
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="confirmAssignment()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-black shadow-lg transition flex justify-center items-center gap-2">تأكيد الإحالة</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="fulfillmentModal" class="fixed inset-0 bg-slate-900/80 z-[100] hidden flex items-end md:items-center justify-center md:p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-4xl max-h-[95vh] md:max-h-[90vh] flex flex-col shadow-2xl animate-[slideIn_0.3s_ease-out]">
+            <div class="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-blue-50 rounded-t-3xl" id="ffModalHeader">
+                <div><h3 class="text-xl md:text-2xl font-black text-blue-800" id="ffAgentName">تجهيز طلبية: </h3><p class="text-[12px] md:text-sm font-bold text-blue-500 mt-1" id="ffOrderDate"></p></div>
+                <button type="button" onclick="closeFulfillmentModal()" class="text-4xl text-slate-400 hover:text-rose-500 font-black leading-none">✕</button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow bg-slate-50/50 scroll-touch">
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto shadow-sm scroll-touch">
+                    <table class="w-full text-right min-w-[600px]">
+                        <thead class="bg-slate-100 text-slate-600 text-xs md:text-sm border-b border-slate-200">
+                            <tr><th class="p-3 md:p-4 font-black">الجهاز</th><th class="p-3 md:p-4 font-black text-center text-rose-600 bg-rose-50/50" id="ffReqLabel">الكمية المطلوبة</th><th class="p-3 md:p-4 font-black text-center text-emerald-600 bg-emerald-50/50">التجهيز الفعلي</th><th class="p-3 md:p-4 font-black">السعر</th><th class="p-3 md:p-4 font-black text-left">المجموع</th></tr>
+                        </thead>
+                        <tbody id="ffItemsList" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+                <div class="mt-6 flex flex-col md:flex-row gap-4 md:gap-6 justify-between items-start md:items-center bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="w-full md:w-auto"><p class="text-xs md:text-sm font-bold text-slate-500 mb-1">صافي الفاتورة حالياً:</p><h2 class="text-2xl md:text-3xl font-black text-blue-700" id="ffActualTotal">0 د.ع</h2></div>
+                    <div class="w-full md:w-1/2 flex items-center gap-3 md:gap-4 bg-emerald-50 p-3 md:p-4 rounded-xl border border-emerald-100">
+                        <div class="flex-grow"><label class="block text-[10px] md:text-xs font-black text-emerald-700 mb-1">نقداً الآن؟ (اختياري)</label><input type="number" id="ffCashReceived" inputmode="numeric" pattern="[0-9]*" value="0" oninput="calculateFFDebt()" placeholder="اتركه 0 للآجل" class="w-full p-2.5 md:p-3 text-base md:text-lg font-black text-emerald-700 bg-white border border-emerald-200 rounded-lg outline-none focus:border-emerald-500"></div>
+                    </div>
+                </div>
+                <div class="mt-3 text-center"><p class="text-[12px] md:text-sm font-bold text-slate-600">سيضاف لديون الوكيل: <span id="ffRemainingDebt" class="text-rose-600 font-black text-lg md:text-xl px-2">0 د.ع</span></p></div>
+            </div>
+            <div class="p-4 md:p-6 border-t border-slate-100 bg-white rounded-b-3xl safe-bottom flex gap-3 md:gap-4">
+                <button type="button" id="btnConfirmFulfill" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 md:py-4 rounded-xl font-black text-lg md:text-xl shadow-lg transition flex justify-center items-center gap-2">تأكيد التجهيز</button>
+                <button type="button" onclick="closeFulfillmentModal()" class="w-1/4 md:w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3.5 md:py-4 rounded-xl font-black text-base md:text-lg transition">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="permissionsModal" class="fixed inset-0 bg-slate-900/70 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                <h3 class="text-xl font-black text-blue-700 flex items-center gap-2">لوحة التحكم الدقيقة بالصلاحيات</h3>
+                <button onclick="closePermModal()" class="text-3xl text-slate-400 hover:text-rose-500 transition font-black">✕</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-slate-50/50 scroll-touch">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
+                        <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" class="perm-checkbox" onchange="toggleSubPerms(this,'admin')"> الإدارة والتسعير
+                        </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_settings_v" class="perm-sub-checkbox admin-sub"> إعدادات نسب التسعير</label>
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pricing_v" class="perm-sub-checkbox admin-sub"> جدول التسعير الذكي</label>
+                        </div>
+                    </div>
+
+                    
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
+                        <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" id="chk_dash" class="perm-checkbox"> الإحصائيات العامة
+                        </label>
+                    </div>
+
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 shadow-sm hover:border-indigo-400 transition">
+                        <label class="font-black text-indigo-800 flex items-center gap-2 mb-3 border-b border-indigo-100 pb-2 cursor-pointer">
+                            <input type="checkbox" id="chk_tech_portal" class="perm-checkbox"> بوابة الصانع (فني التصنيع)
+                        </label>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
+                        <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" id="chk_prod_v" class="perm-checkbox" onchange="toggleSubPerms(this,'prod')"> المخزن والأجهزة
+                        </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_prod_a" class="perm-sub-checkbox prod-sub"> إضافة جهاز جديد</label>
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_prod_e" class="perm-sub-checkbox prod-sub"> تعديل بيانات الأجهزة</label>
+                            <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_prod_d" class="perm-sub-checkbox prod-sub"> حذف الأجهزة</label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-blue-200 shadow-sm bg-blue-50/20 hover:border-blue-400 transition">
+                        <label class="font-black text-blue-800 flex items-center gap-2 mb-3 border-b border-blue-100 pb-2 cursor-pointer">
+                            <input type="checkbox" id="chk_ord_v" class="perm-checkbox" onchange="toggleSubPerms(this,'ord')"> إدارة الطلبيات والتجهيز
+                        </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_ord_pending_v" class="perm-sub-checkbox ord-sub"> رؤية (طلبات قيد الانتظار)</label>
+                            <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_ord_comp_v" class="perm-sub-checkbox ord-sub"> رؤية (سجل المكتملة)</label>
+                            <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_ord_miss_v" class="perm-sub-checkbox ord-sub"> رؤية (سجل النواقص)</label>
+                            <div class="border-t border-blue-100 my-1"></div>
+                            <label class="cursor-pointer text-blue-700 font-black flex items-center gap-1.5"><input type="checkbox" id="chk_ord_e" class="perm-sub-checkbox ord-sub"> أزرار (بدء التجهيز والاستكمال)</label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
+                        <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" id="chk_ret_v" class="perm-checkbox" onchange="toggleSubPerms(this,'ret')"> المرتجعات
+                        </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_ret_a" class="perm-sub-checkbox ret-sub"> زر (الموافقة على الإرجاع)</label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
+                        <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" id="chk_pay_v" class="perm-checkbox" onchange="toggleSubPerms(this,'pay')"> التسديدات المالية
+                        </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_pend_v" class="perm-sub-checkbox pay-sub"> رؤية (طلبات التسديد)</label>
+                            <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_hist_v" class="perm-sub-checkbox pay-sub"> رؤية (سجل التسديدات)</label>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_a" class="perm-sub-checkbox pay-sub"> زر (تأكيد وتحديث الصندوق)</label>
+                            <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_d" class="perm-sub-checkbox pay-sub"> زر (إلغاء ورفض الوصل)</label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
+                        <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" id="chk_exp_v" class="perm-checkbox" onchange="toggleSubPerms(this,'exp')"> المصروفات
+                        </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_exp_a" class="perm-sub-checkbox exp-sub"> إضافة مصروف جديد</label>
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_exp_e" class="perm-sub-checkbox exp-sub"> تعديل مصروف</label>
+                            <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_exp_d" class="perm-sub-checkbox exp-sub"> حذف مصروف</label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
+                        <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" id="chk_agt_v" class="perm-checkbox" onchange="toggleSubPerms(this,'agt')"> الوكلاء
+                        </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_agt_a" class="perm-sub-checkbox agt-sub"> إضافة وكيل جديد</label>
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_agt_e" class="perm-sub-checkbox agt-sub"> تعديل بيانات الوكيل</label>
+                            <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_agt_d" class="perm-sub-checkbox agt-sub"> حذف وكيل</label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
+                        <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" id="chk_emp_v" class="perm-checkbox" onchange="toggleSubPerms(this,'emp')"> الموظفين
+                        </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_emp_a" class="perm-sub-checkbox emp-sub"> إضافة موظف</label>
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_emp_e" class="perm-sub-checkbox emp-sub"> تعديل الصلاحيات</label>
+                            <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_emp_d" class="perm-sub-checkbox emp-sub"> حذف موظف</label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="p-6 bg-white rounded-b-3xl border-t border-slate-100">
+                <button onclick="closePermModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-lg shadow-lg transition flex items-center justify-center gap-2">
+                    تأكيد التحديد
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const getNow = () => { const d = new Date(); return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2, '0')}`; };
+        let API_URL = "https://husseinkazom.pythonanywhere.com/api"; if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:") { API_URL = "http://127.0.0.1:5000/api"; }
+        
+                let products = [], agents = [], orders = [], returns = [], payments = [], expenses = [], employees = [], rawMaterials = [], stats = { sales: 0, cash: 0 }, systemSettings = { marketing: 5, transport: 2, profit: 25 };
+        let lastDbHash = "", currentImg = "", editProdId = null, editAgentId = null, editEmpId = null, editExpId = null, editRawId = null, mainChart = null, isSaving = false;
+
+        let currentUser = null; let tempCustomPrices = {}; let currentFulfillOrderIndex = -1; let isFulfillingMissing = false; 
+        let tempRecipe = []; 
+
+        function showToast(m, t = 'success') { const c = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `${t === 'success' ? 'bg-emerald-500' : 'bg-rose-500'} text-white px-6 py-3 rounded-xl font-black shadow-xl toast-enter pointer-events-auto mb-2 text-sm max-w-xs flex items-center gap-2`; toast.innerHTML = `<span>${m}</span>`; c.appendChild(toast); setTimeout(() => { toast.classList.replace('toast-enter', 'toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000); }
+        function toggleLoader(s) { document.getElementById('globalLoader').style.display = s ? 'flex' : 'none'; }
+
+        async function employeeLogin() {
+            const user = document.getElementById('loginUsername').value.trim(); const pass = document.getElementById('loginPassword').value.trim();
+            if(!user || !pass) return showToast("أدخل اليوزر والباسوورد", "error");
+            const btn = document.getElementById('btnLogin'); btn.innerHTML = '<div class="spinner"></div>'; btn.disabled = true;
+            if(user === 'admin' && pass === '1') {
+                let adminUser = { username: 'admin', name: 'المدير العام', role: 'admin' };
+                localStorage.setItem('admin_auth', 'true'); localStorage.setItem('current_user', JSON.stringify(adminUser)); currentUser = adminUser; showToast("تم الدخول بصلاحيات المدير"); enterApp(); btn.innerHTML = 'دخول للنظام'; btn.disabled = false; return;
+            }
+            try {
+                let res = await fetch(`${API_URL}/employee_login?_t=${new Date().getTime()}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username: user, password: pass}) });
+                let data = await res.json();
+                if(res.ok && data.status === 'success') { localStorage.setItem('admin_auth', 'true'); localStorage.setItem('current_user', JSON.stringify(data.user)); currentUser = data.user; enterApp(); } else { showToast(data.message, "error"); }
+            } catch(e) { showToast("خطأ بالاتصال.", "error"); } finally { btn.innerHTML = 'دخول للنظام'; btn.disabled = false; }
+        }
+
+        function enterApp() {
+            currentUser = JSON.parse(localStorage.getItem('current_user')); if(!currentUser) return logoutAdmin();
+            if(currentUser.username === 'admin') { 
+                currentUser.perms = { 
+                    dash:true, prod_v:true, prod_a:true, prod_e:true, prod_d:true, 
+                    ord_v:true, ord_pending_v:true, ord_comp_v:true, ord_miss_v:true, ord_e:true, 
+                    ret_v:true, ret_a:true, pay_v:true, pay_pend_v:true, pay_hist_v:true, pay_a:true, pay_d:true, 
+                    exp_v:true, exp_a:true, exp_e:true, exp_d:true, agt_v:true, agt_a:true, agt_e:true, agt_d:true, 
+                                        emp_v:true, emp_a:true, emp_e:true, emp_d:true, tech_portal:true, settings_v:true, pricing_v:true 
+ 
+                }; 
+            }
+            document.getElementById('adminLoginScreen').classList.add('hidden'); document.getElementById('adminApp').classList.remove('hidden'); document.getElementById('headerUserName').innerText = `الموظف: ${currentUser.name}`; document.getElementById('currentUserRoleDisplay').innerText = currentUser.username === 'admin' ? 'المدير العام' : 'صلاحيات مخصصة';
+            applyPermissions(); loadData();
+        }
+        
+                function applyPermissions() {
+            const p = currentUser.perms || {};
+            document.getElementById('nav-dashboard').style.display = p.dash ? 'flex' : 'none'; 
+            document.getElementById('nav-addProduct').style.display = p.prod_a ? 'flex' : 'none'; 
+            document.getElementById('nav-rawMaterials').style.display = p.prod_a ? 'flex' : 'none'; 
+            document.getElementById('nav-inventory').style.display = p.prod_v ? 'flex' : 'none'; 
+            document.getElementById('nav-orders').style.display = p.ord_v ? 'flex' : 'none'; 
+            document.getElementById('nav-returns').style.display = p.ret_v ? 'flex' : 'none'; 
+            document.getElementById('nav-payments').style.display = p.pay_v ? 'flex' : 'none'; 
+            document.getElementById('nav-expenses').style.display = p.exp_v ? 'flex' : 'none'; 
+            document.getElementById('nav-agents').style.display = p.agt_v ? 'flex' : 'none'; 
+            document.getElementById('nav-employees').style.display = p.emp_v ? 'flex' : 'none';
+            document.getElementById('nav-myTasks').style.display = p.tech_portal ? 'flex' : 'none';
+            
+            // السطرين الجدد الخاصة بالتسعير
+            if(document.getElementById('nav-settings')) document.getElementById('nav-settings').style.display = p.settings_v ? 'flex' : 'none';
+            if(document.getElementById('nav-pricing')) document.getElementById('nav-pricing').style.display = p.pricing_v ? 'flex' : 'none';
+            
+            document.getElementById('col_prod_actions').style.display = (p.prod_e || p.prod_d) ? 'table-cell' : 'none'; 
+            document.getElementById('col_exp_actions').style.display = (p.exp_e || p.exp_d) ? 'table-cell' : 'none'; 
+            document.getElementById('col_agt_actions').style.display = (p.agt_e || p.agt_d) ? 'table-cell' : 'none'; 
+            document.getElementById('col_emp_actions').style.display = (p.emp_e || p.emp_d) ? 'table-cell' : 'none';
+            
+            document.getElementById('tabPendingOrders').style.display = p.ord_pending_v ? 'block' : 'none';
+            document.getElementById('tabCompletedOrders').style.display = p.ord_comp_v ? 'block' : 'none';
+            document.getElementById('tabMissingOrders').style.display = p.ord_miss_v ? 'block' : 'none';
+
+            document.getElementById('tabPendingPay').style.display = p.pay_pend_v ? 'block' : 'none';
+            document.getElementById('tabHistoryPay').style.display = p.pay_hist_v ? 'block' : 'none';
+
+            let firstTab = p.dash ? 'dashboard' : (p.prod_v ? 'inventory' : (p.ord_v ? 'orders' : (p.tech_portal ? 'myTasks' : (p.agt_v ? 'agents' : 'dashboard')))); 
+            switchTab(firstTab);
+        }
+
+
+        async function loadData() {
+            if(localStorage.getItem('admin_auth') !== 'true' || isSaving) return;
+            try {
+                let res = await fetch(`${API_URL}/db?_t=${new Date().getTime()}`, { cache: 'no-store' }); 
+                if (!res.ok) return; 
+                let db = await res.json(); 
+                if (!db || typeof db !== 'object' || (!db.agents && !db.products)) return;
+                let hash = JSON.stringify(db);
+                if (hash !== lastDbHash) { 
+                    lastDbHash = hash; 
+                    products = db.products||[]; 
+                    agents = db.agents||[]; 
+                    orders = db.orders||[]; 
+                    returns = db.returns||[]; 
+                    payments = db.payments||[]; 
+                    expenses = db.expenses||[]; 
+                    employees = db.employees||[]; 
+                    rawMaterials = db.rawMaterials||[]; 
+                                        stats = db.stats||{sales:0,cash:0}; 
+                    systemSettings = db.systemSettings || { marketing: 5, transport: 2, profit: 25 };
+                    updateUI(); 
+
+                }
+            } catch (e) {}
+        }
+        setInterval(loadData, 5000); window.onload = async () => { if(localStorage.getItem('admin_auth') === 'true') { enterApp(); await loadData(); } };
+
+        async function saveDataBulk(updates) {
+            isSaving = true; toggleLoader(true);
+            try {
+                for (let up of updates) { let res = await fetch(`${API_URL}/update?_t=${new Date().getTime()}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key:up.key, data:up.data}) }); if (!res.ok) { let err = await res.json(); throw new Error(err.message || "حدث خطأ في السيرفر"); } }
+                lastDbHash = ""; isSaving = false; await loadData(); showToast("تم الحفظ بنجاح");
+            } catch(e) { showToast(e.message || "خطأ بالاتصال", "error"); isSaving = false; lastDbHash = ""; await loadData(); }
+            toggleLoader(false); 
+        }
+
+        function filterOrders() {
+            let q = document.getElementById('orderSearchInput').value.toLowerCase();
+            document.querySelectorAll('#pendingOrdersTbody tr, #completedOrdersTbody tr, #missingOrdersTbody tr').forEach(row => {
+                let text = row.innerText.toLowerCase(); row.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+
+        function switchOrderTab(tab) {
+            document.getElementById('tabPendingOrders').className = 'px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-transparent text-slate-600 hover:bg-slate-100 text-xs md:text-sm whitespace-nowrap flex items-center gap-1.5';
+            document.getElementById('tabCompletedOrders').className = 'px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-transparent text-slate-600 hover:bg-slate-100 text-xs md:text-sm whitespace-nowrap flex items-center gap-1.5';
+            document.getElementById('tabMissingOrders').className = 'px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-transparent text-slate-600 hover:bg-slate-100 text-xs md:text-sm whitespace-nowrap flex items-center gap-1.5';
+            
+            document.getElementById('pendingOrdersContainer').classList.add('hidden');
+            document.getElementById('completedOrdersContainer').classList.add('hidden');
+            document.getElementById('missingOrdersContainer').classList.add('hidden');
+
+            if(tab === 'pending') {
+                document.getElementById('tabPendingOrders').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('tabPendingOrders').classList.remove('bg-transparent', 'text-slate-600');
+                document.getElementById('pendingOrdersContainer').classList.remove('hidden');
+            } else if(tab === 'completed') {
+                document.getElementById('tabCompletedOrders').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('tabCompletedOrders').classList.remove('bg-transparent', 'text-slate-600');
+                document.getElementById('completedOrdersContainer').classList.remove('hidden');
+            } else if(tab === 'missing') {
+                document.getElementById('tabMissingOrders').classList.add('bg-rose-500', 'text-white');
+                document.getElementById('tabMissingOrders').classList.remove('bg-transparent', 'text-slate-600', 'hover:bg-rose-50');
+                document.getElementById('missingOrdersContainer').classList.remove('hidden');
+            }
+            filterOrders(); 
+        }
+
+        function switchPaymentTab(tab) {
+            document.getElementById('tabPendingPay').className = 'px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-transparent text-slate-600 hover:bg-slate-100 text-xs md:text-sm flex items-center gap-1.5';
+            document.getElementById('tabHistoryPay').className = 'px-4 md:px-5 py-2.5 rounded-xl font-black transition bg-transparent text-slate-600 hover:bg-slate-100 text-xs md:text-sm flex items-center gap-1.5';
+            document.getElementById('pendingPaymentsWrapper').classList.add('hidden');
+            document.getElementById('historyPaymentsWrapper').classList.add('hidden');
+
+            if(tab === 'pending') {
+                document.getElementById('tabPendingPay').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('tabPendingPay').classList.remove('bg-transparent', 'text-slate-600');
+                document.getElementById('pendingPaymentsWrapper').classList.remove('hidden');
+            } else {
+                document.getElementById('tabHistoryPay').classList.add('bg-emerald-500', 'text-white');
+                document.getElementById('tabHistoryPay').classList.remove('bg-transparent', 'text-slate-600');
+                document.getElementById('historyPaymentsWrapper').classList.remove('hidden');
+            }
+        }
+
+        function updateCustomPricesUI() {
+            let ownerSelect = document.getElementById('pOwner');
+            let cpAgentSelect = document.getElementById('cpAgent');
+            let currentOwner = ownerSelect.value;
+            let currentCpAgent = cpAgentSelect.value;
+            
+            ownerSelect.innerHTML = '<option value="general" class="font-black text-blue-600">🏢 شركة فدك (عام)</option>';
+            cpAgentSelect.innerHTML = '<option value="" disabled selected>اختر الوكيل...</option>';
+            
+            agents.forEach(a => {
+                ownerSelect.innerHTML += `<option value="${a.id}">${a.name}</option>`;
+                cpAgentSelect.innerHTML += `<option value="${a.id}">${a.name}</option>`;
+            });
+            
+            ownerSelect.value = currentOwner || 'general';
+            if(currentCpAgent) cpAgentSelect.value = currentCpAgent;
+            renderCustomPrices();
+        }
+
+        function toggleCustomPriceSection() {
+            if(document.getElementById('pOwner').value === 'general') {
+                document.getElementById('customPricesSection').classList.remove('hidden');
+            } else {
+                document.getElementById('customPricesSection').classList.add('hidden');
+                tempCustomPrices = {};
+                renderCustomPrices();
+            }
+        }
+
+        function addCustomPrice() {
+            let cpA = document.getElementById('cpAgent').value;
+            let cpP = document.getElementById('cpPrice').value;
+            if(!cpA || !cpP) return showToast("اختر وكيل واكتب السعر", "error");
+            tempCustomPrices[cpA] = parseInt(cpP);
+            document.getElementById('cpPrice').value = '';
+            renderCustomPrices();
+        }
+
+        function removeCustomPrice(agId) {
+            delete tempCustomPrices[agId];
+            renderCustomPrices();
+        }
+
+        function renderCustomPrices() {
+            let list = document.getElementById('customPricesList'); 
+            list.innerHTML = '';
+            for(let agId in tempCustomPrices) {
+                let ag = agents.find(a => String(a.id) === String(agId));
+                let name = ag ? ag.name : "وكيل محذوف";
+                list.innerHTML += `<li class="flex justify-between items-center bg-white p-2 rounded-lg border border-blue-100 text-sm font-bold text-slate-700 shadow-sm"><span>${name}</span><div class="flex items-center gap-3"><span class="text-blue-600">${tempCustomPrices[agId].toLocaleString()} د.ع</span><button type="button" onclick="removeCustomPrice('${agId}')" class="text-rose-500 bg-rose-50 w-6 h-6 rounded flex justify-center items-center font-black">×</button></div></li>`;
+            }
+        }
+
+        // دوال الربط الذكي والوصفة
+        function updateRecipeUI() {
+            let rawSelect = document.getElementById('recipeRaw');
+            if(!rawSelect) return;
+            rawSelect.innerHTML = '<option value="" disabled selected>اختر مادة أولية...</option>';
+            rawMaterials.forEach(r => {
+                rawSelect.innerHTML += `<option value="${r.id}">${r.name} (بالمخزن: ${r.qty})</option>`;
+            });
+            renderRecipe();
+        }
+
+        function addRecipeItem() {
+            let rId = document.getElementById('recipeRaw').value;
+            let rQty = parseInt(document.getElementById('recipeQty').value);
+            if(!rId || !rQty || rQty <= 0) return showToast("اختر مادة واكتب كمية صحيحة", "error");
+            
+            let existing = tempRecipe.find(x => String(x.rawId) === String(rId));
+            if(existing) existing.qty += rQty;
+            else tempRecipe.push({rawId: rId, qty: rQty});
+            
+            document.getElementById('recipeQty').value = '';
+            renderRecipe();
+        }
+
+        function removeRecipeItem(rId) {
+            tempRecipe = tempRecipe.filter(x => String(x.rawId) !== String(rId));
+            renderRecipe();
+        }
+
+        function renderRecipe() {
+            let list = document.getElementById('recipeList');
+            if(!list) return;
+            list.innerHTML = '';
+            tempRecipe.forEach(item => {
+                let raw = rawMaterials.find(r => String(r.id) === String(item.rawId));
+                let name = raw ? raw.name : "مادة محذوفة";
+                list.innerHTML += `<li class="flex justify-between items-center bg-white p-2 rounded-lg border border-indigo-100 text-sm font-bold text-slate-700 shadow-sm"><span>${name}</span><div class="flex items-center gap-3"><span class="text-indigo-600">العدد: ${item.qty}</span><button type="button" onclick="removeRecipeItem('${item.rawId}')" class="text-rose-500 bg-rose-50 w-6 h-6 rounded flex justify-center items-center font-black">×</button></div></li>`;
+            });
+        }
+
+        function updateBrandsList() { 
+            const dl = document.getElementById('brandsList'); 
+            if(dl) { 
+                const uniqueBrands = [...new Set(products.map(p => p.brand).filter(b => b && b.trim() !== ''))]; 
+                dl.innerHTML = uniqueBrands.map(b => '<option value="'+b+'">').join(''); 
+            } 
+        }
+
+        document.getElementById('addProductForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            if(!currentImg && !editProdId) return showToast("الرجاء اختيار صورة للجهاز", "error");
+            
+            let prod = {
+                id: editProdId || Date.now(),
+                name: document.getElementById('pName').value,
+                brand: document.getElementById('pBrand').value,
+                owner: document.getElementById('pOwner').value,
+                customPrices: Object.keys(tempCustomPrices).length > 0 ? {...tempCustomPrices} : null,
+                recipe: tempRecipe.length > 0 ? [...tempRecipe] : [], 
+                price: parseInt(document.getElementById('pPrice').value),
+                target: parseInt(document.getElementById('pTarget').value) || 0,
+                mfg_fee: parseInt(document.getElementById('pMfgFee').value) || 0,
+                test_fee: parseInt(document.getElementById('pTestFee').value) || 0,
+                desc: document.getElementById('pDesc').value,
+                img: currentImg || (editProdId ? products.find(x=>x.id===editProdId).img : ''),
+                qty: editProdId ? (products.find(x=>x.id===editProdId).qty || 0) : 0,
+                returned_qty: editProdId ? (products.find(x=>x.id===editProdId).returned_qty || 0) : 0,
+                date: editProdId ? products.find(x=>x.id===editProdId).date : getNow()
+            };
+            
+            if(editProdId) {
+                let exIndex = products.findIndex(x => x.id === editProdId);
+                products[exIndex] = prod;
+                cancelEdit();
+            } else {
+                products.push(prod);
+            }
+            updateUI();
+            await saveDataBulk([{key: 'products', data: products}]);
+            if(!editProdId) { e.target.reset(); currentImg = ""; document.getElementById('imgPreviewContainer').classList.add('hidden'); document.getElementById('pFileLabel').innerHTML = '<span>اختر صورة للجهاز</span>'; tempCustomPrices = {}; renderCustomPrices(); tempRecipe = []; renderRecipe(); }
+        });
+
+
+                function editProduct(id) {
+            editProdId = id;
+            let p = products.find(x => x.id === id);
+            document.getElementById('pName').value = p.name;
+            document.getElementById('pBrand').value = p.brand || '';
+            document.getElementById('pOwner').value = p.owner || 'general';
+            document.getElementById('pPrice').value = p.price;
+            document.getElementById('pTarget').value = p.target || '';
+            
+            // هذني السطرين الجدد اللي ضفناهن
+            document.getElementById('pMfgFee').value = p.mfg_fee || '';
+            document.getElementById('pTestFee').value = p.test_fee || '';
+            
+            document.getElementById('pDesc').value = p.desc || '';
+            currentImg = p.img;
+            document.getElementById('imgPreview').src = currentImg;
+            document.getElementById('imgPreviewContainer').classList.remove('hidden');
+            tempCustomPrices = p.customPrices || {};
+            tempRecipe = p.recipe ? [...p.recipe] : []; 
+            toggleCustomPriceSection();
+            updateRecipeUI(); 
+            document.getElementById('formTitle').innerText = 'تعديل بيانات الجهاز';
+            document.getElementById('btnCancelEdit').classList.remove('hidden');
+            window.scrollTo(0, 0);
+            switchTab('addProduct');
+        }
+
+        function cancelEdit() {
+            editProdId = null;
+            document.getElementById('addProductForm').reset();
+            currentImg = "";
+            document.getElementById('imgPreviewContainer').classList.add('hidden');
+            document.getElementById('pFileLabel').innerHTML = '<span>اختر صورة للجهاز</span>';
+            tempCustomPrices = {};
+            tempRecipe = []; 
+            toggleCustomPriceSection();
+            updateRecipeUI(); 
+            document.getElementById('formTitle').innerText = 'إضافة جهاز جديد';
+            document.getElementById('btnCancelEdit').classList.add('hidden');
+        }
+
+        async function deleteProduct(id) {
+            if(confirm("هل أنت متأكد من حذف هذا الجهاز؟")) {
+                products = products.filter(x => x.id !== id);
+                updateUI();
+                await saveDataBulk([{key: 'products', data: products}]);
+            }
+        }
+
+        document.getElementById('addAgentForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            let ag = {
+                id: editAgentId || Date.now(),
+                name: document.getElementById('aName').value,
+                region: document.getElementById('aRegion').value,
+                code: document.getElementById('aCode').value,
+                debt: editAgentId ? (agents.find(x=>x.id===editAgentId).debt || 0) : 0,
+                sales_count: editAgentId ? (agents.find(x=>x.id===editAgentId).sales_count || 0) : 0,
+                inventory: editAgentId ? (agents.find(x=>x.id===editAgentId).inventory || []) : []
+            };
+            if(editAgentId) {
+                let exIndex = agents.findIndex(x => x.id === editAgentId);
+                agents[exIndex] = ag;
+                cancelAgentEdit();
+            } else {
+                agents.push(ag);
+            }
+            updateUI();
+            await saveDataBulk([{key: 'agents', data: agents}]);
+            if(!editAgentId) e.target.reset();
+        });
+
+        function editAgent(id) {
+            editAgentId = id;
+            let a = agents.find(x => x.id === id);
+            document.getElementById('aName').value = a.name;
+            document.getElementById('aRegion').value = a.region;
+            document.getElementById('aCode').value = a.code || '';
+            document.getElementById('agentFormTitle').innerText = 'تعديل بيانات الوكيل';
+            document.getElementById('btnCancelAgent').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function cancelAgentEdit() {
+            editAgentId = null;
+            document.getElementById('addAgentForm').reset();
+            document.getElementById('agentFormTitle').innerText = 'وكيل جديد';
+            document.getElementById('btnCancelAgent').classList.add('hidden');
+        }
+
+        async function deleteAgent(id) {
+            if(confirm("هل أنت متأكد من حذف هذا الوكيل؟")) {
+                agents = agents.filter(x => x.id !== id);
+                updateUI();
+                await saveDataBulk([{key: 'agents', data: agents}]);
+            }
+        }
+
+        document.getElementById('addRawForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            let raw = {
+                id: editRawId || Date.now(),
+                name: document.getElementById('rawName').value,
+                cost: parseInt(document.getElementById('rawCost').value),
+                qty: parseInt(document.getElementById('rawQty').value)
+            };
+            if(editRawId) {
+                let exIndex = rawMaterials.findIndex(x => x.id === editRawId);
+                rawMaterials[exIndex] = raw;
+                cancelRawEdit();
+            } else {
+                rawMaterials.push(raw);
+            }
+            updateUI();
+            await saveDataBulk([{key: 'rawMaterials', data: rawMaterials}]);
+            if(!editRawId) e.target.reset();
+        });
+
+        function editRawMaterial(id) {
+            editRawId = id;
+            let raw = rawMaterials.find(x => x.id === id);
+            document.getElementById('rawName').value = raw.name;
+            document.getElementById('rawCost').value = raw.cost;
+            document.getElementById('rawQty').value = raw.qty;
+            document.getElementById('btnSubmitRaw').innerHTML = 'تعديل';
+            document.getElementById('btnCancelRaw').classList.remove('hidden');
+        }
+
+        function cancelRawEdit() {
+            editRawId = null;
+            document.getElementById('addRawForm').reset();
+            document.getElementById('btnSubmitRaw').innerHTML = 'إضافة';
+            document.getElementById('btnCancelRaw').classList.add('hidden');
+        }
+
+        async function deleteRawMaterial(id) {
+            if(confirm("هل أنت متأكد من حذف هذه المادة؟")) {
+                rawMaterials = rawMaterials.filter(x => x.id !== id);
+                updateUI();
+                await saveDataBulk([{key: 'rawMaterials', data: rawMaterials}]);
+            }
+        }
+
+        document.getElementById('addExpenseForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            let amount = parseInt(document.getElementById('expAmt').value);
+            let exp = {
+                id: editExpId || Date.now(),
+                note: document.getElementById('expNote').value,
+                amount: amount,
+                date: editExpId ? expenses.find(x=>x.id===editExpId).date : getNow()
+            };
+            if(editExpId) {
+                let oldAmt = expenses.find(x=>x.id===editExpId).amount;
+                stats.cash += oldAmt; 
+                stats.cash -= amount; 
+                let exIndex = expenses.findIndex(x => x.id === editExpId);
+                expenses[exIndex] = exp;
+                cancelExpenseEdit();
+            } else {
+                expenses.push(exp);
+                stats.cash = (stats.cash || 0) - amount; 
+            }
+            updateUI();
+            await saveDataBulk([{key: 'expenses', data: expenses}, {key: 'stats', data: stats}]);
+            if(!editExpId) e.target.reset();
+        });
+
+        function editExpense(id) {
+            editExpId = id;
+            let ex = expenses.find(x => x.id === id);
+            document.getElementById('expNote').value = ex.note;
+            document.getElementById('expAmt').value = ex.amount;
+            document.getElementById('btnSubmitExpense').innerText = 'تعديل';
+            document.getElementById('btnCancelExpense').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function cancelExpenseEdit() {
+            editExpId = null;
+            document.getElementById('addExpenseForm').reset();
+            document.getElementById('btnSubmitExpense').innerHTML = 'إضافة';
+            document.getElementById('btnCancelExpense').classList.add('hidden');
+        }
+
+        async function deleteExpense(id) {
+            if(confirm("هل أنت متأكد من حذف هذا المصروف؟ (سيتم إرجاع مبلغه للصندوق)")) {
+                let ex = expenses.find(x => x.id === id);
+                stats.cash = (stats.cash || 0) + ex.amount;
+                expenses = expenses.filter(x => x.id !== id);
+                updateUI();
+                await saveDataBulk([{key: 'expenses', data: expenses}, {key: 'stats', data: stats}]);
+            }
+        }
+
+        document.getElementById('addEmployeeForm').addEventListener('submit', async e => { 
+            e.preventDefault(); 
+            let emp = { 
+                id: editEmpId || Date.now(), 
+                name: document.getElementById('empName').value, 
+                username: document.getElementById('empUsername').value, 
+                password: document.getElementById('empPassword').value, 
+                balance: editEmpId ? (employees.find(x=>x.id===editEmpId).balance || 0) : 0,
+                perms: { 
+                    dash: document.getElementById('chk_dash').checked, 
+                    prod_v: document.getElementById('chk_prod_v').checked, prod_a: document.getElementById('chk_prod_a').checked, prod_e: document.getElementById('chk_prod_e').checked, prod_d: document.getElementById('chk_prod_d').checked, 
+                    ord_v: document.getElementById('chk_ord_v').checked, ord_pending_v: document.getElementById('chk_ord_pending_v').checked, ord_comp_v: document.getElementById('chk_ord_comp_v').checked, ord_miss_v: document.getElementById('chk_ord_miss_v').checked, ord_e: document.getElementById('chk_ord_e').checked, 
+                    ret_v: document.getElementById('chk_ret_v').checked, ret_a: document.getElementById('chk_ret_a').checked, 
+                    pay_v: document.getElementById('chk_pay_v').checked, pay_a: document.getElementById('chk_pay_a').checked, pay_d: document.getElementById('chk_pay_d').checked, pay_hist_v: document.getElementById('chk_pay_hist_v').checked, pay_pend_v: document.getElementById('chk_pay_pend_v').checked,
+                    exp_v: document.getElementById('chk_exp_v').checked, exp_a: document.getElementById('chk_exp_a').checked, exp_e: document.getElementById('chk_exp_e').checked, exp_d: document.getElementById('chk_exp_d').checked, 
+                    agt_v: document.getElementById('chk_agt_v').checked, agt_a: document.getElementById('chk_agt_a').checked, agt_e: document.getElementById('chk_agt_e').checked, agt_d: document.getElementById('chk_agt_d').checked, 
+                    emp_v: document.getElementById('chk_emp_v').checked, emp_a: document.getElementById('chk_emp_a').checked, emp_e: document.getElementById('chk_emp_e').checked, emp_d: document.getElementById('chk_emp_d').checked,
+                                        tech_portal: document.getElementById('chk_tech_portal').checked,
+                    settings_v: document.getElementById('chk_settings_v').checked,
+                    pricing_v: document.getElementById('chk_pricing_v').checked
+
+                } 
+            }; 
+            if(editEmpId) { 
+                let exIndex = employees.findIndex(x=>x.id===editEmpId); employees[exIndex] = emp; cancelEmpEdit(); 
+            } else { 
+                if(employees.some(x=>x.username === emp.username)) return showToast("اسم المستخدم موجود مسبقاً", "error"); 
+                employees.push(emp); 
+            } 
+            updateUI(); await saveDataBulk([{key:'employees', data:employees}]); e.target.reset(); document.querySelectorAll('.perm-checkbox, .perm-sub-checkbox').forEach(c => c.checked = false); 
+        });
+
+                function editEmployee(id) { 
+            editEmpId=id; let e=employees.find(x=>x.id===id); 
+            document.getElementById('empName').value=e.name; document.getElementById('empUsername').value=e.username; document.getElementById('empPassword').value=e.password; 
+            let p = e.perms || {};
+            document.getElementById('chk_dash').checked = !!p.dash; 
+            document.getElementById('chk_prod_v').checked = !!p.prod_v; document.getElementById('chk_prod_a').checked = !!p.prod_a; document.getElementById('chk_prod_e').checked = !!p.prod_e; document.getElementById('chk_prod_d').checked = !!p.prod_d; 
+            document.getElementById('chk_ord_v').checked = !!p.ord_v; document.getElementById('chk_ord_pending_v').checked = !!p.ord_pending_v; document.getElementById('chk_ord_comp_v').checked = !!p.ord_comp_v; document.getElementById('chk_ord_miss_v').checked = !!p.ord_miss_v; document.getElementById('chk_ord_e').checked = !!p.ord_e; 
+            document.getElementById('chk_ret_v').checked = !!p.ret_v; document.getElementById('chk_ret_a').checked = !!p.ret_a; 
+            document.getElementById('chk_pay_v').checked = !!p.pay_v; document.getElementById('chk_pay_a').checked = !!p.pay_a; document.getElementById('chk_pay_d').checked = !!p.pay_d; document.getElementById('chk_pay_hist_v').checked = !!p.pay_hist_v; document.getElementById('chk_pay_pend_v').checked = !!p.pay_pend_v;
+            document.getElementById('chk_exp_v').checked = !!p.exp_v; document.getElementById('chk_exp_a').checked = !!p.exp_a; document.getElementById('chk_exp_e').checked = !!p.exp_e; document.getElementById('chk_exp_d').checked = !!p.exp_d; 
+            document.getElementById('chk_agt_v').checked = !!p.agt_v; document.getElementById('chk_agt_a').checked = !!p.agt_a; document.getElementById('chk_agt_e').checked = !!p.agt_e; document.getElementById('chk_agt_d').checked = !!p.agt_d; 
+            document.getElementById('chk_emp_v').checked = !!p.emp_v; document.getElementById('chk_emp_a').checked = !!p.emp_a; document.getElementById('chk_emp_e').checked = !!p.emp_e; document.getElementById('chk_emp_d').checked = !!p.emp_d;
+            document.getElementById('chk_tech_portal').checked = !!p.tech_portal;
+            document.getElementById('chk_settings_v').checked = !!p.settings_v;
+            document.getElementById('chk_pricing_v').checked = !!p.pricing_v;
+
+            document.getElementById('empFormTitle').innerHTML=`تعديل بيانات الموظف`; document.getElementById('btnCancelEmp').classList.remove('hidden'); window.scrollTo(0,0); openPermModal(); 
+        }
+
+
+        function cancelEmpEdit() { editEmpId=null; document.getElementById('addEmployeeForm').reset(); document.querySelectorAll('.perm-checkbox, .perm-sub-checkbox').forEach(c => c.checked = false); document.getElementById('empFormTitle').innerHTML=`إضافة موظف`; document.getElementById('btnCancelEmp').classList.add('hidden'); }
+
+        async function deleteEmployee(id) { if(confirm("هل أنت متأكد من حذف هذا الموظف؟")) { employees=employees.filter(a=>a.id!==id); updateUI(); await saveDataBulk([{key:'employees', data:employees}]); } }
+
+        function updateUI() {
+            const p = currentUser.perms || {};
+            updateBrandsList();
+            
+            updateCustomPricesUI(); 
+            updateRecipeUI(); 
+            
+            if (p.tech_portal) loadMyTasks();
+
+            let totalExp = expenses.reduce((s, e) => s + e.amount, 0);
+            document.getElementById('statSales').innerText = (stats.sales || 0).toLocaleString() + ' د.ع'; 
+            document.getElementById('statExp').innerText = totalExp.toLocaleString() + ' د.ع'; 
+            document.getElementById('statProfit').innerText = (stats.cash || 0).toLocaleString() + ' د.ع'; 
+            document.getElementById('statDebt').innerText = agents.reduce((s, a) => s + (a.debt || 0), 0).toLocaleString() + ' د.ع';
+
+            let pricingHtml = '';
+            products.forEach(pr => {
+                let matCost = 0;
+                if(pr.recipe && pr.recipe.length > 0) {
+                    pr.recipe.forEach(r => { let raw = rawMaterials.find(x => String(x.id) === String(r.rawId)); if(raw) matCost += (raw.cost * r.qty); });
+                }
+                let mfgCost = pr.mfg_fee || 0;
+                let testCost = pr.test_fee || 0;
+                let mktgCost = Math.round(matCost * ((systemSettings.marketing || 0) / 100));
+                let transCost = Math.round(matCost * ((systemSettings.transport || 0) / 100));
+                let totalCost = matCost + mfgCost + testCost + mktgCost + transCost;
+                let suggestedPrice = Math.round(totalCost * (1 + ((systemSettings.profit || 0) / 100)));
+                let profitAmt = suggestedPrice - totalCost;
+                
+                pricingHtml += `
+                <tr class="hover:bg-blue-50/50 transition cursor-pointer" onclick="editProduct(${pr.id})" title="اضغط لتعديل هذا الجهاز">
+                    <td class="p-4 border-l border-slate-100 font-black text-blue-700">${pr.name}</td>
+                    <td class="p-4 border-l border-slate-100">${matCost.toLocaleString()}</td>
+                    <td class="p-4 border-l border-slate-100">${mfgCost.toLocaleString()}</td>
+                    <td class="p-4 border-l border-slate-100">${testCost.toLocaleString()}</td>
+                    <td class="p-4 border-l border-slate-100">${mktgCost.toLocaleString()}</td>
+                    <td class="p-4 border-l border-slate-100">${transCost.toLocaleString()}</td>
+                    <td class="p-4 border-l border-slate-100 font-black text-rose-600 bg-rose-50/50">${totalCost.toLocaleString()}</td>
+                    <td class="p-4 border-l border-slate-100 font-black text-emerald-600 bg-emerald-50/50">${suggestedPrice.toLocaleString()}</td>
+                    <td class="p-4 font-black text-blue-600 bg-blue-50/50">${profitAmt.toLocaleString()}</td>
+                </tr>`;
+            });
+            let ptBody = document.getElementById('pricingTableBody');
+            if(ptBody) ptBody.innerHTML = pricingHtml || '<tr><td colspan="9" class="p-8 text-slate-400 font-bold text-center">لا توجد أجهزة مضافة حتى الآن.</td></tr>';
+            
+            let navPricing = document.getElementById('nav-pricing');
+            if(navPricing) navPricing.style.display = (currentUser && currentUser.username === 'admin') ? 'flex' : 'none';
+
+            
+document.getElementById('adminProductsList').innerHTML = products.map(pr => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4 font-bold flex items-center gap-3"><img src="${pr.img}" class="w-10 h-10 rounded-lg border object-cover shadow-sm bg-white p-0.5"><div class="flex flex-col text-right"><span class="text-slate-800">${pr.name}</span><span class="text-xs text-slate-400 mt-1">${pr.brand || ''}</span></div></td>
+                    <td class="p-4 text-sm font-black text-slate-500">${pr.date || '-'}</td>
+                    <td class="p-4 font-black text-blue-600 text-center text-lg"><div class="flex flex-col"><span>${pr.price.toLocaleString()}</span>${pr.target ? `<span class="text-[10px] text-orange-500 bg-orange-50 px-1 rounded border border-orange-100 mt-1 w-fit mx-auto">تارجت: ${pr.target}</span>` : ''}</div></td>
+                    <td class="p-4 text-center font-black text-slate-700 text-lg">${pr.qty || 0}</td>
+                    <td class="p-4 text-center text-rose-600 font-black text-lg">${pr.returned_qty || 0}</td>
+                    <td class="p-4 text-center flex gap-2 justify-center" style="display:${(p.prod_e||p.prod_d)?'flex':'none'}">
+                        ${p.prod_e ? `<button onclick="editProduct(${pr.id})" class="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1">تعديل</button>` : ''}
+                        ${p.prod_d ? `<button onclick="deleteProduct(${pr.id})" class="text-rose-500 hover:bg-rose-50 px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1">حذف</button>` : ''}
+                    </td>
+                </tr>`).join('');
+
+            document.getElementById('rawMaterialsList').innerHTML = rawMaterials.map(raw => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4 font-black text-slate-800 text-base">${raw.name}</td>
+                    <td class="p-4 text-center font-bold text-slate-600 text-lg">${raw.cost.toLocaleString()} د.ع</td>
+                    <td class="p-4 text-center font-black text-blue-600 text-xl">${raw.qty}</td>
+                    <td class="p-4 text-center flex gap-2 justify-center">
+                        <button onclick="editRawMaterial(${raw.id})" class="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-1">تعديل</button>
+                        <button onclick="deleteRawMaterial(${raw.id})" class="text-rose-500 hover:bg-rose-50 px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-1">حذف</button>
+                    </td>
+                </tr>`).join('');
+
+            let activeO = orders.filter(o => o.status !== 'delivered');
+            let completedO = orders.filter(o => o.status === 'delivered');
+            document.getElementById('ordersBadge').innerText = activeO.length; document.getElementById('ordersBadge').style.display = activeO.length ? 'block' : 'none';
+            
+            document.getElementById('pendingOrdersTbody').innerHTML = activeO.length ? activeO.map((o) => {
+                let itemsList = o.items.map(item => {
+                    let mfgStatusText = '';
+                    let assignBtn = '';
+                    let mfgStatusColor = 'bg-slate-50';
+                    
+                    if (!item.mfg_status || item.mfg_status === 'pending') {
+                        assignBtn = `<button onclick="openAssignModal(${o.id}, ${item.id}, '${item.name}', ${item.requested_qty || item.qty})" class="mt-2 text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-black px-3 py-1.5 rounded-lg transition border border-indigo-200 w-full text-center">إحالة لصانع ⚙️</button>`;
+                    } else if (item.mfg_status === 'assigned') {
+                        let techName = employees.find(e => String(e.id) === String(item.tech_id))?.name || 'صانع مجهول';
+                        mfgStatusColor = 'bg-amber-50 border-amber-200';
+                        mfgStatusText = `<div class="text-[10px] font-black text-amber-600 mt-1">بانتظار تسليم المواد لـ: ${techName}</div>`;
+                        assignBtn = `<button onclick="deliverMaterials(${o.id}, ${item.id})" class="mt-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-black px-3 py-1.5 rounded-lg transition shadow-sm w-full text-center">تسليم المواد 📦</button>`;
+                    } else if (item.mfg_status === 'in_progress') {
+                        let techName = employees.find(e => String(e.id) === String(item.tech_id))?.name || 'صانع';
+                        mfgStatusColor = 'bg-blue-50 border-blue-200';
+                        mfgStatusText = `<div class="text-[10px] font-black text-blue-600 mt-1">قيد التصنيع لدى: ${techName}</div>`;
+                    } else if (item.mfg_status === 'manufactured') {
+                        mfgStatusColor = 'bg-emerald-50 border-emerald-200';
+                        mfgStatusText = `<div class="text-[10px] font-black text-emerald-600 mt-1">تم التصنيع - بانتظار الفحص</div>`;
+                    } else if (item.mfg_status === 'tested') {
+                         mfgStatusColor = 'bg-emerald-100 border-emerald-300';
+                         mfgStatusText = `<div class="text-[10px] font-black text-emerald-700 mt-1">✅ جاهز 100% (تم الفحص)</div>`;
+                    }
+
+                    return `
+                    <div class="flex flex-col ${mfgStatusColor} p-2 rounded-lg mb-2 border border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <img src="${item.img}" class="w-10 h-10 rounded-md object-cover border border-slate-200 bg-white p-0.5">
+                            <div class="flex flex-col text-right w-full">
+                                <span class="text-sm font-black text-slate-800">${item.name}</span>
+                                <span class="text-xs font-black text-rose-500 mt-1 bg-rose-50 border border-rose-100 w-fit px-2 py-0.5 rounded">العدد المطلوب: ${item.requested_qty || item.qty}</span>
+                                ${mfgStatusText}
+                            </div>
+                        </div>
+                        ${assignBtn}
+                    </div>`;
+                }).join('');
+                return `<tr class="hover:bg-blue-50/20 transition"><td class="p-3 md:p-4 align-top"><div class="font-black text-slate-800 text-base md:text-lg">طلب #${o.id}</div><div class="text-sm font-bold text-slate-500 mt-1">${o.agentName}</div></td><td class="p-3 md:p-4 align-top text-xs md:text-sm font-black text-slate-500">${o.date || '-'}</td><td class="p-3 md:p-4 align-top">${itemsList}</td><td class="p-3 md:p-4 align-top text-center font-black text-blue-700 text-lg md:text-xl">${o.total.toLocaleString()} د.ع</td><td class="p-3 md:p-4 align-top text-center">${p.ord_e ? `<button onclick="openFulfillmentModal(${o.id}, false)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-5 py-2.5 rounded-xl font-black text-sm transition shadow-md w-full whitespace-nowrap flex items-center justify-center gap-1.5">بدء التجهيز</button>` : '-'}</td></tr>`;
+            }).join('') : '<tr><td colspan="5" class="text-center font-bold text-slate-400 p-8 text-sm">لا توجد طلبات جديدة.</td></tr>';
+
+            document.getElementById('completedOrdersTbody').innerHTML = completedO.length ? [...completedO].reverse().map(o => {
+                let itemsList = o.items.map(item => `
+                    <div class="flex items-center gap-3 bg-slate-50/50 p-2 rounded-lg mb-2 border border-slate-100 ${item.delivered_qty > 0 ? 'border-r-4 border-r-emerald-400' : 'border-r-4 border-r-slate-300'}">
+                        <img src="${item.img}" class="w-10 h-10 rounded-md object-cover border border-slate-200 bg-white p-0.5">
+                        <div class="flex flex-col text-right">
+                            <span class="text-sm font-black text-slate-800">${item.name}</span>
+                            <span class="text-xs font-black text-emerald-600 mt-1 bg-emerald-50 border border-emerald-100 w-fit px-2 py-0.5 rounded">تم تجهيز: ${item.delivered_qty || 0}</span>
+                        </div>
+                    </div>`).join('');
+                let hasMissing = o.items.some(item => (item.requested_qty || item.qty) > (item.delivered_qty || 0));
+                let badge = hasMissing ? `<span class="text-xs font-black bg-rose-100 text-rose-600 px-3 py-1.5 rounded-md border border-rose-200 whitespace-nowrap flex items-center justify-center gap-1">بها نواقص</span>` : `<span class="text-xs font-black bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-md border border-emerald-200 whitespace-nowrap flex items-center justify-center gap-1">مكتملة 100%</span>`;
+                return `<tr class="hover:bg-emerald-50/20 transition"><td class="p-3 md:p-4 align-top"><div class="font-black text-slate-800 text-base md:text-lg">فاتورة #${o.id}</div><div class="text-sm font-bold text-slate-500 mt-1">${o.agentName}</div></td><td class="p-3 md:p-4 align-top text-xs md:text-sm font-black text-slate-500">${o.delivery_date || '-'}</td><td class="p-3 md:p-4 align-top">${itemsList}</td><td class="p-3 md:p-4 align-top text-center"><div class="font-black text-slate-800 text-lg md:text-xl">${o.total.toLocaleString()} د.ع</div><div class="text-xs font-bold text-emerald-600 mt-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 inline-block">مقبوض: ${(o.cash_received || 0).toLocaleString()}</div></td><td class="p-3 md:p-4 align-top text-center">${badge}</td></tr>`;
+            }).join('') : '<tr><td colspan="5" class="text-center font-bold text-slate-400 p-8">لا توجد سجلات.</td></tr>';
+
+            let missingOrdersHtml = '';
+            completedO.forEach(o => {
+                let missingItemsForThisOrder = o.items.filter(item => (item.requested_qty || item.qty) > (item.delivered_qty || 0));
+                if (missingItemsForThisOrder.length > 0) {
+                    let itemsList = missingItemsForThisOrder.map(item => { 
+                        let req = item.requested_qty || item.qty; let del = item.delivered_qty || 0; 
+                        return `
+                        <div class="flex items-center gap-3 bg-rose-50/30 p-2 rounded-lg mb-2 border border-rose-100 border-r-4 border-r-rose-400">
+                            <img src="${item.img}" class="w-10 h-10 rounded-md object-cover border border-slate-200 bg-white p-0.5">
+                            <div class="flex flex-col text-right">
+                                <span class="text-sm font-black text-slate-800">${item.name}</span>
+                                <span class="text-xs font-black text-rose-600 mt-1 bg-white px-2 py-0.5 rounded border border-rose-200 w-fit">العدد الناقص: ${req - del}</span>
+                            </div>
+                        </div>`; 
+                    }).join('');
+                    missingOrdersHtml += `<tr class="hover:bg-rose-50/50 transition"><td class="p-3 md:p-4 align-top"><div class="font-black text-slate-800 text-base md:text-lg">طلب #${o.id}</div><div class="text-sm font-bold text-slate-500 mt-1">${o.agentName}</div><div class="text-xs font-bold text-slate-400 mt-1">الرفع الأصلي: ${o.date}</div></td><td class="p-3 md:p-4 align-top text-xs md:text-sm font-black text-slate-500">${o.date || '-'}</td><td class="p-3 md:p-4 align-top">${itemsList}</td><td class="p-3 md:p-4 align-top text-center">${p.ord_e ? `<button onclick="openFulfillmentModal(${o.id}, true)" class="bg-rose-500 hover:bg-rose-600 text-white px-4 md:px-5 py-2.5 rounded-xl font-black text-sm transition shadow-md w-full whitespace-nowrap flex items-center justify-center gap-1.5">استكمال التجهيز</button>` : '-'}</td></tr>`;
+                }
+            });
+            document.getElementById('missingOrdersTbody').innerHTML = missingOrdersHtml || '<tr><td colspan="4" class="text-center font-bold text-slate-400 p-8 text-sm">لا توجد نواقص للوكلاء حالياً.</td></tr>';
+
+            const rc = document.getElementById('returnsContainer'); rc.innerHTML = returns.length ? '' : '<div class="text-center py-10 bg-white rounded-2xl border border-slate-100"><p class="font-bold text-slate-400">لا توجد طلبات إرجاع حالياً.</p></div>';
+            document.getElementById('returnsBadge').innerText = returns.length; document.getElementById('returnsBadge').style.display = returns.length ? 'block' : 'none';
+            returns.forEach((r, i) => rc.innerHTML += `<div class="bg-white p-5 rounded-2xl border-r-8 border-rose-500 shadow-sm flex justify-between items-center mb-3"><div class="flex items-center gap-4"><img src="${r.img}" class="w-14 h-14 rounded-xl object-cover border border-slate-200 p-0.5"><div><p class="font-black text-slate-800 text-lg">${r.agentName}</p><p class="text-xs font-black text-slate-500 mb-1">التاريخ: ${r.date || '-'}</p><p class="text-sm font-black text-rose-500">${r.itemName} <span class="bg-rose-50 border border-rose-100 px-2 py-0.5 rounded text-xs ml-1">العدد: ${r.qty}</span></p></div></div>${p.ret_a ? `<button onclick="approveReturn(${i})" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-2.5 rounded-xl font-black shadow-md text-sm transition flex items-center gap-1">موافقة</button>` : ''}</div>`);
+
+            const pc = document.getElementById('paymentsContainer'); 
+            let pend = payments.filter(pm => pm.status === 'pending');
+            let apprv = payments.filter(pm => pm.status === 'approved');
+
+            pc.innerHTML = pend.length ? '' : '<div class="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100"><p class="font-bold text-slate-400">لا توجد طلبات تسديد جديدة قيد الانتظار.</p></div>';
+            document.getElementById('paymentsBadge').innerText = pend.length; 
+            document.getElementById('paymentsBadge').style.display = pend.length ? 'block' : 'none';
+            
+            pend.forEach(pm => { 
+                pc.innerHTML += `<div class="bg-white p-5 rounded-2xl border-r-8 border-emerald-500 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-4"><div><p class="font-black text-slate-800 text-xl">${pm.agentName}</p><p class="text-xs font-black text-slate-400 mt-1">تاريخ الرفع: ${pm.date || '-'}</p><p class="text-3xl font-black text-emerald-600 mt-2">${pm.amount.toLocaleString()} د.ع</p><p class="text-xs font-bold text-slate-500 mt-2 bg-slate-50 p-2 rounded border border-slate-200 inline-block">الملاحظة: ${pm.note || 'بدون'}</p></div><div class="flex flex-col gap-2 w-full md:w-auto">${p.pay_a ? `<button onclick="approvePayment(${pm.id})" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-black shadow-md text-sm transition flex items-center justify-center gap-1.5">تأكيد وتحديث الصندوق</button>` : ''}${p.pay_d ? `<button onclick="deletePayment(${pm.id})" class="bg-slate-100 hover:bg-rose-50 text-rose-600 px-6 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-1.5">إلغاء ورفض</button>` : ''}</div></div>`; 
+            });
+
+            let histHtml = '';
+            if(apprv.length === 0) {
+                histHtml = '<tr><td colspan="6" class="text-center font-bold text-slate-400 p-8 text-sm">لا يوجد سجل تسديدات حالياً.</td></tr>';
+            } else {
+                [...apprv].reverse().forEach(pm => {
+                    histHtml += `
+                    <tr class="hover:bg-emerald-50/20 transition">
+                        <td class="p-4 font-black text-slate-800 text-base">${pm.agentName}</td>
+                        <td class="p-4 text-center font-black text-emerald-600 text-xl">${pm.amount.toLocaleString()} د.ع</td>
+                        <td class="p-4 text-xs font-black text-slate-500">${pm.date || '-'}</td>
+                        <td class="p-4 text-xs font-black text-emerald-600">${pm.approved_date || '-'}</td>
+                        <td class="p-4 text-sm font-bold text-slate-600 max-w-[200px] truncate" title="${pm.note || '-'}">${pm.note || '-'}</td>
+                        <td class="p-4 text-center"><span class="bg-blue-50 text-blue-700 text-xs font-black px-3 py-1 rounded-md border border-blue-100 whitespace-nowrap">${pm.approved_by || 'غير محدد'}</span></td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('historyPaymentsTbody').innerHTML = histHtml;
+
+            document.getElementById('expensesList').innerHTML = expenses.map(ex => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4 font-bold text-slate-700 text-base">${ex.note}</td>
+                    <td class="p-4 font-black text-rose-600 text-xl">${ex.amount.toLocaleString()} د.ع</td>
+                    <td class="p-4 text-sm font-black text-slate-500">${ex.date}</td>
+                    <td class="p-4 text-center flex gap-2 justify-center" style="display:${(p.exp_e||p.exp_d)?'flex':'none'}">
+                        ${p.exp_e ? `<button onclick="editExpense(${ex.id})" class="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-1">تعديل</button>` : ''}
+                        ${p.exp_d ? `<button onclick="deleteExpense(${ex.id})" class="text-rose-500 hover:bg-rose-50 px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-1">حذف</button>` : ''}
+                    </td>
+                </tr>`).join('');
+
+            document.getElementById('employeesList').innerHTML = employees.map(e => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4 font-bold text-slate-700 text-base">${e.name} ${e.username === 'admin' ? '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md ml-2 border border-blue-200">المدير العام</span>' : ''} ${e.perms && e.perms.tech_portal ? '<span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md ml-1 border border-indigo-200">صانع</span>' : ''}</td>
+                    <td class="p-4 text-slate-500 font-black tracking-widest">${e.username}</td>
+                    <td class="p-4 text-center font-black text-indigo-600">${(e.balance || 0).toLocaleString()} د.ع</td>
+                    <td class="p-4 text-center flex gap-2 justify-center" style="display:${(p.emp_e||p.emp_d)?'flex':'none'}">
+                        ${e.balance > 0 && p.emp_e ? `<button onclick="payTechnician(${e.id})" class="text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-1">تسديد</button>` : ''}
+                        ${p.emp_e ? `<button onclick="editEmployee(${e.id})" class="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-1">تعديل</button>` : ''}
+                        ${p.emp_d && e.username !== 'admin' ? `<button onclick="deleteEmployee(${e.id})" class="text-rose-500 hover:bg-rose-50 px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-1">حذف</button>` : ''}
+                    </td>
+                </tr>`).join('');
+
+            document.getElementById('agentsList').innerHTML = agents.map(a => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4 font-bold text-slate-700 text-base">${a.name}</td>
+                    <td class="p-4 text-rose-600 font-black text-xl">${(a.debt || 0).toLocaleString()}</td>
+                    <td class="p-4 font-black text-sm text-slate-500">${a.sales_count || 0}</td>
+                    <td class="p-4 text-center flex gap-2 justify-center" style="display:${(p.agt_e||p.agt_d)?'flex':'none'}">
+                        ${p.agt_e ? `<button onclick="editAgent(${a.id})" class="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-1">تعديل</button>` : ''}
+                        ${p.agt_d ? `<button onclick="deleteAgent(${a.id})" class="text-rose-500 hover:bg-rose-50 px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-1">حذف</button>` : ''}
+                    </td>
+                </tr>`).join('');
+            
+            renderChart(stats.sales, totalExp); filterOrders();
+        }
+
+        function loadMyTasks() {
+            let list = document.getElementById('myTasksList');
+            list.innerHTML = '';
+            let hasTasks = false;
+            let me = employees.find(e => e.id === currentUser.id);
+            if(me) currentUser.balance = me.balance || 0;
+            document.getElementById('techBalanceDisplay').innerText = (currentUser.balance || 0).toLocaleString();
+
+            orders.forEach(o => {
+                o.items.forEach(item => {
+                    if (String(item.tech_id) === String(currentUser.id)) {
+                        let reqQty = item.requested_qty || item.qty;
+                        if (item.mfg_status === 'in_progress') {
+                            hasTasks = true;
+                            let earn = (item.mfg_fee || 0) * reqQty;
+                            list.innerHTML += `
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex gap-3 items-center">
+                                        <img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5">
+                                        <div>
+                                            <h4 class="font-black text-slate-800 text-lg">${item.name}</h4>
+                                            <p class="text-xs font-bold text-slate-400">من طلب #${o.id} | العدد: <span class="text-rose-500">${reqQty}</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center mt-2">
+                                    <span class="text-sm font-bold text-blue-800">أجر التصنيع الإجمالي:</span>
+                                    <span class="font-black text-blue-700 text-lg">${earn.toLocaleString()} د.ع</span>
+                                </div>
+                                <button onclick="markAsManufactured(${o.id}, ${item.id}, ${earn})" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">
+                                    تأكيد إتمام التصنيع
+                                </button>
+                            </div>`;
+                        } else if (item.mfg_status === 'manufactured') {
+                            hasTasks = true;
+                            let earn = (item.test_fee || 0) * reqQty;
+                            list.innerHTML += `
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex gap-3 items-center">
+                                        <img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5">
+                                        <div>
+                                            <h4 class="font-black text-slate-800 text-lg">${item.name}</h4>
+                                            <p class="text-xs font-bold text-slate-400">مرحلة الفحص | العدد: <span class="text-emerald-500">${reqQty}</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center mt-2">
+                                    <span class="text-sm font-bold text-emerald-800">أجر الفحص الإجمالي:</span>
+                                    <span class="font-black text-emerald-700 text-lg">${earn.toLocaleString()} د.ع</span>
+                                </div>
+                                <button onclick="markAsTested(${o.id}, ${item.id}, ${earn})" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">
+                                    تأكيد إتمام الفحص
+                                </button>
+                            </div>`;
+                        }
+                    }
+                });
+            });
+
+            if(!hasTasks) {
+                list.innerHTML = `<div class="col-span-full bg-slate-50 p-10 rounded-2xl border border-slate-200 text-center"><p class="text-slate-500 font-bold">لا توجد مهام تصنيع أو فحص مسندة إليك حالياً.</p></div>`;
+            }
+        }
+
+        async function markAsManufactured(orderId, itemId, earnAmount) {
+            if(confirm("هل أنت متأكد من إنهاء تصنيع هذه الأجهزة؟")) {
+                let order = orders.find(o => o.id === orderId);
+                let item = order.items.find(i => i.id === itemId);
+                let emp = employees.find(e => e.id === currentUser.id);
+                item.mfg_status = 'manufactured';
+                emp.balance = (emp.balance || 0) + earnAmount;
+                currentUser.balance = emp.balance;
+                updateUI();
+                await saveDataBulk([{key: 'orders', data: orders}, {key: 'employees', data: employees}]);
+                showToast(`تم التصنيع! أُضيف ${earnAmount.toLocaleString()} لرصيدك.`);
+            }
+        }
+
+        async function markAsTested(orderId, itemId, earnAmount) {
+            if(confirm("هل تم فحص الأجهزة بالكامل وهي جاهزة للوكيل؟")) {
+                let order = orders.find(o => o.id === orderId);
+                let item = order.items.find(i => i.id === itemId);
+                let emp = employees.find(e => e.id === currentUser.id);
+                item.mfg_status = 'tested';
+                emp.balance = (emp.balance || 0) + earnAmount;
+                currentUser.balance = emp.balance;
+                updateUI();
+                await saveDataBulk([{key: 'orders', data: orders}, {key: 'employees', data: employees}]);
+                showToast(`تم الفحص! أُضيف ${earnAmount.toLocaleString()} لرصيدك.`);
+            }
+        }
+
+        async function payTechnician(empId) {
+            let emp = employees.find(e => e.id === empId);
+            let payAmount = prompt(`رصيد الموظف ${emp.name} هو: ${(emp.balance || 0).toLocaleString()} د.ع\nأدخل المبلغ المراد تسديده الآن:`, emp.balance);
+            if(payAmount === null) return;
+            payAmount = parseInt(payAmount);
+            if(isNaN(payAmount) || payAmount <= 0) return showToast("مبلغ غير صحيح", "error");
+            if(payAmount > emp.balance) return showToast("المبلغ أكبر من رصيد الموظف!", "error");
+            emp.balance -= payAmount;
+            stats.cash = (stats.cash || 0) - payAmount;
+            expenses.push({ id: Date.now(), note: `تسديد أجور تصنيع للموظف: ${emp.name}`, amount: payAmount, date: getNow() });
+            updateUI();
+            await saveDataBulk([{key: 'employees', data: employees}, {key: 'stats', data: stats}, {key: 'expenses', data: expenses}]);
+            showToast("تم تسديد الأجور وخصمها من الصندوق بنجاح");
+        }
+
+                function openAssignModal(orderId, itemId, itemName, qty) {
+            document.getElementById('assignOrderId').value = orderId;
+            document.getElementById('assignItemId').value = itemId;
+            document.getElementById('assignItemName').innerText = `${itemName} (العدد: ${qty})`;
+            let techSelect = document.getElementById('assignTechSelect');
+            techSelect.innerHTML = '<option value="" disabled selected>اختر الصانع...</option>';
+            let techs = employees.filter(e => e.perms && e.perms.tech_portal);
+            if(techs.length === 0) {
+                techSelect.innerHTML = '<option value="" disabled>لا يوجد موظفين بصلاحية صانع!</option>';
+            } else {
+                techs.forEach(t => { techSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`; });
+            }
+            
+            // سحب الأجور الثابتة من قاعدة بيانات الأجهزة تلقائياً
+            let product = products.find(p => p.id === itemId);
+            document.getElementById('assignMfgFee').value = product ? (product.mfg_fee || 0) : 0; 
+            document.getElementById('assignTestFee').value = product ? (product.test_fee || 0) : 0;
+            
+            document.getElementById('assignTechModal').classList.remove('hidden');
+        }
+
+
+        async function confirmAssignment() {
+            let orderId = parseInt(document.getElementById('assignOrderId').value);
+            let itemId = parseInt(document.getElementById('assignItemId').value);
+            let techId = document.getElementById('assignTechSelect').value;
+            let mfgFee = parseInt(document.getElementById('assignMfgFee').value) || 0;
+            let testFee = parseInt(document.getElementById('assignTestFee').value) || 0;
+            if(!techId) return showToast("يجب اختيار صانع!", "error");
+            let order = orders.find(o => o.id === orderId);
+            if(order) {
+                let item = order.items.find(i => i.id === itemId);
+                if(item) {
+                    item.tech_id = techId; item.mfg_status = 'assigned'; item.mfg_fee = mfgFee; item.test_fee = testFee;
+                    closeAssignModal(); updateUI();
+                    await saveDataBulk([{key: 'orders', data: orders}]); showToast("تمت إحالة الجهاز للصانع بنجاح");
+                }
+            }
+        }
+
+        // --- التعديل هنا: الربط الذكي وخصم المواد الأولية تلقائياً ---
+        async function deliverMaterials(orderId, itemId) {
+            if(confirm("هل تم تسليم المواد الأولية لهذا الجهاز إلى الصانع؟ (سيتم خصمها من المخزن تلقائياً)")) {
+                let order = orders.find(o => o.id === orderId);
+                if(order) {
+                    let item = order.items.find(i => i.id === itemId);
+                    if(item) {
+                        // --- بداية الربط الذكي والخصم ---
+                        let mainProduct = products.find(p => p.id === item.id);
+                        let reqQty = item.requested_qty || item.qty;
+                        let recipe = (mainProduct && mainProduct.recipe) ? mainProduct.recipe : [];
+                        
+                        let insufficient = [];
+                        recipe.forEach(rItem => {
+                            let raw = rawMaterials.find(x => String(x.id) === String(rItem.rawId));
+                            let needed = rItem.qty * reqQty;
+                            if(!raw || raw.qty < needed) insufficient.push(raw ? raw.name : 'مادة محذوفة');
+                        });
+                        
+                        if(insufficient.length > 0) {
+                            if(!confirm(`تحذير: المواد التالية لا تكفي في المخزن للتصنيع:\n(${insufficient.join('، ')})\nهل تريد الاستمرار بالسالب؟`)) return;
+                        }
+
+                        // خصم المواد فعلياً
+                        recipe.forEach(rItem => {
+                            let raw = rawMaterials.find(x => String(x.id) === String(rItem.rawId));
+                            if(raw) raw.qty -= (rItem.qty * reqQty);
+                        });
+                        // --- نهاية الربط الذكي ---
+
+                        item.mfg_status = 'in_progress'; 
+                        item.materials_delivered_date = getNow();
+                        
+                        updateUI();
+                        // حفظ التغييرات في الطلبيات والمواد الأولية
+                        await saveDataBulk([{key: 'orders', data: orders}, {key: 'rawMaterials', data: rawMaterials}]); 
+                        showToast("تم تسجيل تسليم المواد وخصمها من المخزن. الجهاز الآن قيد التصنيع.");
+                    }
+                }
+            }
+        }
+
+        function openFulfillmentModal(orderId, isMissingMode) {
+            let idx = orders.findIndex(x => x.id === orderId);
+            if(idx === -1) return;
+            currentFulfillOrderIndex = idx; 
+            isFulfillingMissing = isMissingMode; 
+            let o = orders[idx];
+            
+            document.getElementById('ffModalHeader').className = isMissingMode ? 'p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-rose-50 rounded-t-3xl' : 'p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-blue-50 rounded-t-3xl';
+            document.getElementById('ffAgentName').innerText = isMissingMode ? `استكمال نواقص: ${o.agentName}` : `تجهيز طلبية: ${o.agentName}`; 
+            document.getElementById('ffOrderDate').innerText = `من طلب #${o.id} | ${o.date || '-'}`; document.getElementById('ffCashReceived').value = '';
+            document.getElementById('ffReqLabel').innerText = isMissingMode ? 'الناقص' : 'المطلوبة';
+            
+            let itemsHtml = '';
+            o.items.forEach((item, i) => {
+                let reqQty = item.requested_qty || item.qty; let delQty = item.delivered_qty || 0;
+                let targetQtyToFulfill = isMissingMode ? (reqQty - delQty) : reqQty;
+                
+                if(targetQtyToFulfill > 0) {
+                    let mainProduct = products.find(p => p.id === item.id); let stockAvail = mainProduct ? mainProduct.qty : 0;
+                    let stockWarn = stockAvail < targetQtyToFulfill ? `<p class="text-[10px] md:text-xs text-rose-500 mt-1 font-black bg-rose-50 px-2 py-0.5 rounded border border-rose-100 inline-block">بالمخزن: ${stockAvail} فقط!</p>` : `<p class="text-[10px] md:text-xs text-emerald-500 mt-1 font-black bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 inline-block">بالمخزن: ${stockAvail}</p>`;
+                    itemsHtml += `<tr class="hover:bg-blue-50/30 transition"><td class="p-3 md:p-4 flex items-center gap-2 md:gap-3 border-r border-slate-100"><img src="${item.img}" class="w-10 md:w-12 h-10 md:h-12 rounded-lg object-cover border border-slate-200 bg-white p-0.5"><div class="flex flex-col text-right"><span class="font-bold text-sm md:text-base text-slate-800">${item.name}</span>${stockWarn}</div></td><td class="p-3 md:p-4 text-center font-black text-rose-600 bg-rose-50/20 text-lg md:text-xl border-x border-slate-100">${targetQtyToFulfill}</td><td class="p-3 md:p-4 bg-emerald-50/20 border-x border-slate-100"><input type="number" id="ff_qty_${i}" inputmode="numeric" pattern="[0-9]*" value="${targetQtyToFulfill}" min="0" oninput="calculateFFTotals()" class="w-20 md:w-24 mx-auto block text-center font-black text-xl md:text-2xl text-emerald-700 bg-white border-2 border-emerald-200 rounded-lg p-2 outline-none focus:border-emerald-500 transition"></td><td class="p-3 md:p-4 text-center font-bold text-slate-600 text-xs md:text-base border-x border-slate-100" id="ff_price_${i}" data-price="${item.price}">${item.price.toLocaleString()} د.ع</td><td class="p-3 md:p-4 text-left font-black text-blue-700 text-base md:text-xl border-l border-slate-100" id="ff_row_total_${i}">${(item.price * targetQtyToFulfill).toLocaleString()} د.ع</td></tr>`;
+                }
+            });
+            
+            document.getElementById('ffItemsList').innerHTML = itemsHtml; document.getElementById('fulfillmentModal').classList.remove('hidden'); calculateFFTotals(); 
+            document.getElementById('btnConfirmFulfill').onclick = () => confirmFulfillment();
+        }
+
+        function closeFulfillmentModal() { document.getElementById('fulfillmentModal').classList.add('hidden'); currentFulfillOrderIndex = -1; isFulfillingMissing = false; }
+
+        function calculateFFTotals() {
+            if (currentFulfillOrderIndex === -1) return;
+            let o = orders[currentFulfillOrderIndex]; let actualNewTotal = 0;
+            o.items.forEach((item, i) => {
+                let input = document.getElementById(`ff_qty_${i}`);
+                if(input) { let qty = parseInt(input.value) || 0; if(qty < 0) { qty = 0; input.value = 0; } let rowTotal = qty * item.price; actualNewTotal += rowTotal; document.getElementById(`ff_row_total_${i}`).innerText = `${rowTotal.toLocaleString()} د.ع`; }
+            });
+            document.getElementById('ffActualTotal').innerText = `${actualNewTotal.toLocaleString()} د.ع`; document.getElementById('ffActualTotal').dataset.total = actualNewTotal; calculateFFDebt();
+        }
+        
+        function calculateFFDebt() {
+            let actualNewTotal = parseInt(document.getElementById('ffActualTotal').dataset.total) || 0; let cash = parseInt(document.getElementById('ffCashReceived').value) || 0; let debt = actualNewTotal - cash;
+            let debtEl = document.getElementById('ffRemainingDebt'); debtEl.innerText = `${debt.toLocaleString()} د.ع`;
+            if (debt < 0) { debtEl.classList.replace('text-rose-600', 'text-emerald-600'); debtEl.innerText = `${Math.abs(debt).toLocaleString()} د.ع (فائض)`; } else { debtEl.classList.replace('text-emerald-600', 'text-rose-600'); }
+        }
+
+        async function confirmFulfillment() {
+            if (currentFulfillOrderIndex === -1) return; let o = orders[currentFulfillOrderIndex];
+            let actualNewTotal = parseInt(document.getElementById('ffActualTotal').dataset.total) || 0; let newCash = parseInt(document.getElementById('ffCashReceived').value) || 0;
+            
+            let a = agents.find(x => x.id === o.agentId);
+            if(a) {
+                a.debt = (a.debt || 0) + (actualNewTotal - newCash); let newItemsCount = 0;
+                o.items.forEach((item, i) => {
+                    let input = document.getElementById(`ff_qty_${i}`);
+                    if(input) {
+                        let newlyDeliveredQty = parseInt(input.value) || 0;
+                        if (newlyDeliveredQty > 0) {
+                            let ai = a.inventory.find(x => x.id === item.id); if(ai) ai.qty += newlyDeliveredQty; else a.inventory.push({...item, qty: newlyDeliveredQty});
+                            let mp = products.find(p => p.id === item.id); if(mp) { mp.qty -= newlyDeliveredQty; if(mp.qty < 0) mp.qty = 0; }
+                            newItemsCount += newlyDeliveredQty;
+                        }
+                        item.requested_qty = item.requested_qty || item.qty;
+                        if(isFulfillingMissing) { item.delivered_qty = (item.delivered_qty || 0) + newlyDeliveredQty; } else { item.delivered_qty = newlyDeliveredQty; }
+                    }
+                });
+                a.sales_count = (a.sales_count || 0) + newItemsCount;
+            }
+            stats.sales = (stats.sales || 0) + actualNewTotal; stats.cash = (stats.cash || 0) + newCash;
+            
+            if(isFulfillingMissing) { o.total += actualNewTotal; o.cash_received = (o.cash_received || 0) + newCash; } 
+            else { o.total = actualNewTotal; o.cash_received = newCash; o.status = 'delivered'; }
+            o.delivery_date = getNow();
+            
+            closeFulfillmentModal(); await saveDataBulk([{key:'orders', data:orders}, {key:'agents', data:agents}, {key:'products', data:products}, {key:'stats', data:stats}]);
+        }
+
+        function openDirectPaymentModal() {
+            const sel = document.getElementById('newPayAgent');
+            sel.innerHTML = '<option value="" disabled selected>اختر الوكيل...</option>';
+            agents.forEach(a => sel.innerHTML += `<option value="${a.id}">${a.name}</option>`);
+            document.getElementById('addPaymentModal').classList.remove('hidden');
+        }
+
+        async function submitDirectPayment() {
+            let agId = document.getElementById('newPayAgent').value;
+            let amt = parseInt(document.getElementById('newPayAmt').value);
+            let note = document.getElementById('newPayNote').value;
+            if(!agId || !amt) return showToast("الرجاء اختيار وكيل وإدخال المبلغ", "error");
+            let ag = agents.find(x => String(x.id) === String(agId)); if(!ag) return;
+            let payData = { id: Date.now(), date: getNow(), agentId: ag.id, agentName: ag.name, amount: amt, note: note, status: 'approved', approved_by: currentUser.name, approved_date: getNow() };
+            ag.debt -= amt; stats.cash = (stats.cash || 0) + amt; payments.push(payData);
+            document.getElementById('addPaymentModal').classList.add('hidden'); document.getElementById('newPayAmt').value = ''; document.getElementById('newPayNote').value = '';
+            updateUI(); await saveDataBulk([{key: 'payments', data: payments}, {key: 'agents', data: agents}, {key: 'stats', data: stats}]); showToast("تم تسجيل استلام الدفعة بنجاح");
+        }
+
+        async function approveReturn(idx) { let r = returns[idx]; let itemTotalValue = r.price * r.qty; let refundInput = prompt(`قيمة المرتجع الكلية: ${itemTotalValue.toLocaleString()} د.ع\nكم مبلغ النقد المرجع للوكيل بيده؟:`, "0"); if (refundInput === null) return; let refundCash = parseInt(refundInput) || 0; let p = products.find(x => x.id === r.itemId); if(p) p.returned_qty = (p.returned_qty || 0) + r.qty; let a = agents.find(x => x.id === r.agentId); if(a) { a.debt = (a.debt || 0) - itemTotalValue + refundCash; let ai = a.inventory.find(x => x.id === r.itemId); if(ai) { ai.qty -= r.qty; if(ai.qty <= 0) a.inventory = a.inventory.filter(x => x.id !== r.itemId); } } stats.sales = (stats.sales || 0) - itemTotalValue; stats.cash = (stats.cash || 0) - refundCash; r.status = 'approved'; returns.splice(idx, 1); await saveDataBulk([{key:'returns', data:returns}, {key:'products', data:products}, {key:'agents', data:agents}, {key:'stats', data:stats}]); }
+        
+        async function approvePayment(payId) { let p = payments.find(x => x.id === payId); if(p) { let a = agents.find(x => x.id === p.agentId); if(a) a.debt -= p.amount; stats.cash = (stats.cash || 0) + p.amount; p.status = 'approved'; p.approved_by = currentUser.name; p.approved_date = getNow(); await saveDataBulk([{key:'payments', data:payments}, {key:'agents', data:agents}, {key:'stats', data:stats}]); } }
+
+        async function deletePayment(payId) { if(confirm("هل أنت متأكد من إلغاء ورفض هذا الوصل؟")) { payments = payments.filter(x => x.id !== payId); await saveDataBulk([{key:'payments', data:payments}]); } }
+
+        function compressImg(e) { 
+            let file = e.target.files[0]; 
+            if(!file) return; 
+            document.getElementById('pFileLabel').innerHTML = `<span>تم اختيار: ${file.name}</span>`; 
+            const img = new Image(); 
+            img.onload = () => { 
+                const canvas = document.createElement('canvas'); 
+                let w = img.width, h = img.height; 
+                if(w > 400) { h *= 400/w; w = 400; } 
+                canvas.width = w; canvas.height = h; 
+                let ctx = canvas.getContext('2d'); 
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); 
+                ctx.drawImage(img, 0, 0, w, h); 
+                currentImg = canvas.toDataURL('image/jpeg', 0.6); 
+                document.getElementById('imgPreview').src = currentImg; 
+                document.getElementById('imgPreviewContainer').classList.remove('hidden'); 
+                try { URL.revokeObjectURL(img.src); } catch(err){}
+            }; 
+            img.onerror = () => { showToast("صيغة الصورة غير مدعومة", "error"); currentImg = ""; }; 
+            img.src = URL.createObjectURL(file); 
+        }
+
+        function openPermModal() { document.getElementById('permissionsModal').classList.remove('hidden'); }
+        function closePermModal() { document.getElementById('permissionsModal').classList.add('hidden'); }
+        function toggleSubPerms(mainCheckbox, subClass) { document.querySelectorAll(`.${subClass}-sub`).forEach(cb => cb.checked = mainCheckbox.checked); }
+
+        function renderChart(s, e) { 
+            let canvas = document.getElementById('mainChart');
+            if(!canvas) return; 
+            if(mainChart) mainChart.destroy(); 
+            let valSales = Math.max(0, s || 0); let valExp = Math.max(0, e || 0); 
+            let chartData = [valSales, valExp]; let chartColors = ['#3b82f6', '#ef4444']; 
+            let chartLabels = ['المبيعات المجهزة', 'المصروفات']; 
+            
+            if(valSales === 0 && valExp === 0) { chartData =[1]; chartColors = ['#f1f5f9']; chartLabels = ['لا توجد حركات مالية بعد']; } 
+            
+            mainChart = new Chart(canvas.getContext('2d'), { type: 'doughnut', data: { labels: chartLabels, datasets: [{ data: chartData, backgroundColor: chartColors, borderWidth: 0 }] }, options: { cutout: '80%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Cairo', weight: 'bold' } } } } } }); 
+        }
+        
+        function exportToExcel() { const data = agents.map(a => ({ "الوكيل": a.name, "المنطقة": a.region, "الديون": a.debt, "سحب الأجهزة": a.sales_count })); const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "الديون"); XLSX.writeFile(wb, `تقرير_الشركة_${new Date().toLocaleDateString()}.xlsx`); }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-closed'); document.getElementById('sidebarOverlay').classList.toggle('hidden'); }
+        
+        function switchTab(id) { 
+            document.querySelectorAll('.section-content').forEach(e => e.classList.add('hidden')); 
+            document.getElementById(id + 'Section').classList.remove('hidden'); 
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-blue-600', 'text-white')); 
+            document.querySelector(`[data-tab="${id}"]`).classList.add('bg-blue-600', 'text-white'); 
+                                    document.getElementById('pageTitle').innerText = {'dashboard':'الإحصائيات والمالية','settings':'إعدادات التسعير','pricing':'جدول التسعير الذكي','addProduct':'إضافة جهاز','rawMaterials':'المواد الأولية','inventory':'المخزن والجرد','orders':'إدارة الطلبيات','returns':'المرتجعات','payments':'التسديدات المالية','expenses':'المصروفات','agents':'الوكلاء','employees':'إدارة الموظفين', 'myTasks':'مهام التصنيع والفحص'}[id]; 
+
+
+            
+            if(id === 'orders') {
+                let p = currentUser.perms || {};
+                if(p.ord_pending_v) switchOrderTab('pending');
+                else if(p.ord_comp_v) switchOrderTab('completed');
+                else if(p.ord_miss_v) switchOrderTab('missing');
+            }
+
+            if(id === 'payments') { 
+                let p = currentUser.perms || {};
+                if(p.pay_pend_v) switchPaymentTab('pending');
+                else if(p.pay_hist_v) switchPaymentTab('history');
+            }
+
+            if(window.innerWidth < 768) toggleSidebar(); 
+        }
+
+        function logoutAdmin() { localStorage.removeItem('admin_auth'); localStorage.removeItem('current_user'); location.reload(); }
+
+        document.getElementById('settingsForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            systemSettings = {
+                marketing: parseFloat(document.getElementById('setMarketing').value) || 0,
+                transport: parseFloat(document.getElementById('setTransport').value) || 0,
+                profit: parseFloat(document.getElementById('setProfit').value) || 0
+            };
+            await saveDataBulk([{key: 'systemSettings', data: systemSettings}]);
+            showToast("تم حفظ الإعدادات بنجاح! سيتم تطبيقها على الأسعار.");
+        });
+
+        let originalUpdateUI = updateUI;
+        updateUI = function() {
+            originalUpdateUI();
+            if(document.getElementById('setMarketing')) {
+                document.getElementById('setMarketing').value = systemSettings.marketing;
+                document.getElementById('setTransport').value = systemSettings.transport;
+                document.getElementById('setProfit').value = systemSettings.profit;
+            }
+            let navSettings = document.getElementById('nav-settings');
+            if(navSettings) navSettings.style.display = (currentUser && currentUser.username === 'admin') ? 'flex' : 'none';
+        };
+
+
+    </script>
+</body>
+</html>
