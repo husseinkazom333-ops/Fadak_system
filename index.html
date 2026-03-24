@@ -540,6 +540,67 @@
         function toggleCart() { document.getElementById('cartDrawer').classList.toggle('-translate-x-full'); document.getElementById('overlay').classList.toggle('hidden'); if(cart.length===0) updateCart(); }
         async function submitOrder() { if(!cart.length) return showToast("السلة فارغة", "error"); const btn = document.getElementById('btnSubmitOrder'); const orig = btn.innerHTML; btn.innerHTML = '<div class="spinner"></div> جاري الإرسال...'; btn.disabled = true; let oData = { id: Math.floor(Math.random()*9000), date: getNow(), agentId: agent.id, agentName: agent.name, items: cart, total: cart.reduce((s, i) => s + (i.price * i.qty), 0), status: 'pending' }; try { await fetch(`${API_URL}/submit_order?_t=${new Date().getTime()}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(oData) }); cart = []; updateCart(); toggleCart(); showToast("تم إرسال الطلبية بنجاح 🎉"); lastDbHash = ""; fetchUpdates(); switchView('orders'); } catch(e) { showToast("خطأ في الإرسال", "error"); } btn.innerHTML = orig; btn.disabled = false; }
         function filterProducts() { let input = document.getElementById('searchInput').value.toLowerCase(); document.querySelectorAll('#productsGrid > div').forEach(card => { card.style.display = card.querySelector('h2').innerText.toLowerCase().includes(input) ? 'flex' : 'none'; }); }
+        // ==========================================
+        // نظام تثبيت التطبيق (PWA) للأندرويد والآيفون
+        // ==========================================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Fail:', err));
+            });
+        }
+
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+        if (!isStandalone) {
+            let deferredPrompt;
+            const installBanner = document.getElementById('installBanner');
+            const installBtn = document.getElementById('installBtn');
+            const closeInstallBtn = document.getElementById('closeInstallBtn');
+            const iosInstallModal = document.getElementById('iosInstallModal');
+
+            const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+
+            if (isIos()) {
+                if(localStorage.getItem('iosPromptDismissed') !== 'true') {
+                    setTimeout(() => iosInstallModal.classList.remove('hidden'), 2000);
+                }
+            } else {
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                    if(localStorage.getItem('installPromptDismissed') !== 'true') {
+                        installBanner.classList.remove('hidden');
+                        setTimeout(() => installBanner.classList.remove('translate-y-full'), 100);
+                    }
+                });
+
+                installBtn.addEventListener('click', async () => {
+                    installBanner.classList.add('translate-y-full');
+                    setTimeout(() => installBanner.classList.add('hidden'), 300);
+                    if(deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        deferredPrompt = null;
+                    }
+                });
+
+                closeInstallBtn.addEventListener('click', () => {
+                    installBanner.classList.add('translate-y-full');
+                    setTimeout(() => installBanner.classList.add('hidden'), 300);
+                    localStorage.setItem('installPromptDismissed', 'true');
+                });
+            }
+        }
+
+        window.dismissIosPrompt = function() {
+            document.getElementById('iosInstallModal').classList.add('hidden');
+            localStorage.setItem('iosPromptDismissed', 'true');
+        };
+
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('installBanner').classList.add('hidden');
+            console.log('تم التثبيت بنجاح!');
+        });
     </script>
     <div id="installBanner" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-4 z- flex items-center justify-between transform translate-y-full transition-transform duration-300 hidden safe-bottom">
         <div class="flex items-center gap-3">
@@ -566,5 +627,31 @@
             </div>
         </div>
     </div>
+
+   <div id="installBanner" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-4 z- flex items-center justify-between transform translate-y-full transition-transform duration-300 hidden safe-bottom">
+        <div class="flex items-center gap-3">
+            <img src="icon.png" class="w-10 h-10 rounded-xl" alt="App Icon">
+            <div>
+                <h4 class="font-bold text-sm">تطبيق شركة فدك</h4>
+                <p class="text-xs text-slate-400">ثبت التطبيق للوصول السريع بدون متصفح</p>
+            </div>
+        </div>
+        <button id="installBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-black text-sm transition shadow-lg">تثبيت</button>
+        <button id="closeInstallBtn" class="text-slate-400 hover:text-white absolute top-1 left-2 p-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
+
+    <div id="iosInstallModal" class="fixed inset-0 bg-slate-900/80 z- hidden flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 shadow-2xl relative animate-[slideInUp_0.3s_ease-out]">
+            <button onclick="dismissIosPrompt()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            <div class="text-center mt-2">
+                <img src="icon.png" class="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-md border border-slate-100">
+                <h3 class="text-xl font-black text-slate-800 mb-2">تثبيت التطبيق (الآيفون)</h3>
+                <p class="text-sm font-bold text-slate-500 mb-6 leading-relaxed">لتثبيت التطبيق على جهازك، اضغط على زر المشاركة <svg class="inline w-5 h-5 text-blue-500 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> بالأسفل ثم اختر <br><b class="text-slate-700">"إضافة للشاشة الرئيسية"</b>.</p>
+                <button onclick="dismissIosPrompt()" class="w-full bg-slate-100 text-slate-700 font-black py-4 rounded-xl hover:bg-slate-200 transition">حسناً، فهمت</button>
+            </div>
+        </div>
+    </div> 
 </body>
 </html>
