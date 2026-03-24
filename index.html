@@ -260,77 +260,7 @@
             <button id="btnSubmitOrder" onclick="submitOrder()" class="w-full theme-gradient hover:opacity-90 text-white py-4 rounded-xl font-black text-lg shadow-lg transition flex justify-center items-center gap-2 active-scale">تأكيد وإرسال الطلبية 🚀</button>
         </div>
     </div>
-// ==========================================
-        // نظام تثبيت التطبيق (PWA) للأندرويد والآيفون
-        // ==========================================
 
-        // 1. تسجيل السيرفر ووركر (مطلوب لعمل التطبيق)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Fail:', err));
-            });
-        }
-
-        // 2. التحقق هل التطبيق مثبت مسبقاً؟ (Standalone mode)
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
-        // إذا التطبيق غير مثبت، نعرض رسائل التثبيت
-        if (!isStandalone) {
-            let deferredPrompt;
-            const installBanner = document.getElementById('installBanner');
-            const installBtn = document.getElementById('installBtn');
-            const closeInstallBtn = document.getElementById('closeInstallBtn');
-            const iosInstallModal = document.getElementById('iosInstallModal');
-
-            // دالة لمعرفة هل الجهاز آيفون؟
-            const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-
-            if (isIos()) {
-                // نظام الآيفون
-                if(localStorage.getItem('iosPromptDismissed') !== 'true') {
-                    setTimeout(() => iosInstallModal.classList.remove('hidden'), 2000); // إظهار بعد ثانيتين
-                }
-            } else {
-                // نظام الأندرويد والكمبيوتر
-                window.addEventListener('beforeinstallprompt', (e) => {
-                    e.preventDefault();
-                    deferredPrompt = e;
-                    // إذا لم يقم المستخدم بإغلاق الشريط سابقاً
-                    if(localStorage.getItem('installPromptDismissed') !== 'true') {
-                        installBanner.classList.remove('hidden');
-                        setTimeout(() => installBanner.classList.remove('translate-y-full'), 100);
-                    }
-                });
-
-                installBtn.addEventListener('click', async () => {
-                    installBanner.classList.add('translate-y-full');
-                    setTimeout(() => installBanner.classList.add('hidden'), 300);
-                    if(deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        deferredPrompt = null;
-                    }
-                });
-
-                closeInstallBtn.addEventListener('click', () => {
-                    installBanner.classList.add('translate-y-full');
-                    setTimeout(() => installBanner.classList.add('hidden'), 300);
-                    localStorage.setItem('installPromptDismissed', 'true'); // عدم الإزعاج مرة أخرى
-                });
-            }
-        }
-
-        // دالة إغلاق نافذة الآيفون
-        window.dismissIosPrompt = function() {
-            document.getElementById('iosInstallModal').classList.add('hidden');
-            localStorage.setItem('iosPromptDismissed', 'true');
-        };
-
-        // إخفاء فوري إذا تم التثبيت بنجاح
-        window.addEventListener('appinstalled', () => {
-            document.getElementById('installBanner').classList.add('hidden');
-            console.log('تم التثبيت بنجاح!');
-        });
 
     <script>
         const getNow = () => { const d = new Date(); return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2, '0')}`; };
