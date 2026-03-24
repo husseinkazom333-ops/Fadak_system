@@ -1687,6 +1687,22 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                     }
                 });
                 a.sales_count = (a.sales_count || 0) + newItemsCount;
+
+                // --- هذا الكود اللي جان مفقود عندك (لتوليد وصل التسديد) ---
+                if(newCash > 0) {
+                    payments.push({
+                        id: Date.now() + Math.floor(Math.random() * 1000), 
+                        date: getNow(), 
+                        agentId: a.id, 
+                        agentName: a.name, 
+                        amount: newCash, 
+                        note: `دفعة نقدية أثناء تجهيز طلبية #${o.id}`, 
+                        status: 'approved', 
+                        approved_by: currentUser ? currentUser.name : 'النظام', 
+                        approved_date: getNow()
+                    });
+                }
+                // -------------------------------------------------------------
             }
             stats.sales = (stats.sales || 0) + actualNewTotal; stats.cash = (stats.cash || 0) + newCash;
             
@@ -1694,7 +1710,8 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             else { o.total = actualNewTotal; o.cash_received = newCash; o.status = 'delivered'; }
             o.delivery_date = getNow();
             
-            closeFulfillmentModal(); await saveDataBulk([{key:'orders', data:orders}, {key:'agents', data:agents}, {key:'products', data:products}, {key:'stats', data:stats}, {key:'payments', data:payments}]);
+            closeFulfillmentModal(); 
+            await saveDataBulk([{key:'orders', data:orders}, {key:'agents', data:agents}, {key:'products', data:products}, {key:'stats', data:stats}, {key:'payments', data:payments}]);
         }
 
         function openDirectPaymentModal() {
