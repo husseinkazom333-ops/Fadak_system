@@ -1514,28 +1514,35 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             }
             
             // سحب الأجور الثابتة من قاعدة بيانات الأجهزة تلقائياً
-            let product = products.find(p => p.id === itemId);
+            let product = products.find(p => String(p.id) === String(itemId));
             document.getElementById('assignMfgFee').value = product ? (product.mfg_fee || 0) : 0; 
             document.getElementById('assignTestFee').value = product ? (product.test_fee || 0) : 0;
             
             document.getElementById('assignTechModal').classList.remove('hidden');
         }
 
+        // هاي الدالة اللي كانت مفقودة وتسبب توقف الزر
+        function closeAssignModal() {
+            document.getElementById('assignTechModal').classList.add('hidden');
+        }
 
         async function confirmAssignment() {
-            let orderId = parseInt(document.getElementById('assignOrderId').value);
-            let itemId = parseInt(document.getElementById('assignItemId').value);
+            let orderId = document.getElementById('assignOrderId').value;
+            let itemId = document.getElementById('assignItemId').value;
             let techId = document.getElementById('assignTechSelect').value;
             let mfgFee = parseInt(document.getElementById('assignMfgFee').value) || 0;
             let testFee = parseInt(document.getElementById('assignTestFee').value) || 0;
             if(!techId) return showToast("يجب اختيار صانع!", "error");
-            let order = orders.find(o => o.id === orderId);
+            
+            let order = orders.find(o => String(o.id) === String(orderId));
             if(order) {
-                let item = order.items.find(i => i.id === itemId);
+                let item = order.items.find(i => String(i.id) === String(itemId));
                 if(item) {
                     item.tech_id = techId; item.mfg_status = 'assigned'; item.mfg_fee = mfgFee; item.test_fee = testFee;
-                    closeAssignModal(); updateUI();
-                    await saveDataBulk([{key: 'orders', data: orders}]); showToast("تمت إحالة الجهاز للصانع بنجاح");
+                    closeAssignModal(); 
+                    updateUI();
+                    await saveDataBulk([{key: 'orders', data: orders}]); 
+                    showToast("تمت إحالة الجهاز للصانع بنجاح");
                 }
             }
         }
