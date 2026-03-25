@@ -175,8 +175,8 @@
                             <thead class="bg-slate-800 text-white text-sm border-b">
                                 <tr>
                                     <th class="p-4 border-l border-slate-700">اسم الجهاز</th>
-                                    <th class="p-4 border-l border-slate-700 text-blue-300">العلامة التجارية</th>
-                                    <th class="p-4 text-right font-black text-indigo-300">الرصيد الجاهز 📦</th>
+                                    <th class="p-4 border-l border-slate-700">العلامة التجارية</th>
+                                    <th class="p-4 border-l border-slate-700">الرصيد الجاهز </th>
                                     <th class="p-4 border-l border-slate-700">تكلفة المواد</th>
                                     <th class="p-4 border-l border-slate-700">أجر التصنيع</th>
                                     <th class="p-4 border-l border-slate-700">أجر الفحص</th>
@@ -217,6 +217,24 @@
                         <div class="pt-4 border-t border-slate-100">
                             <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-xl font-black text-lg shadow-lg transition flex items-center justify-center gap-2">حفظ الإعدادات وتحديث الأسعار</button>
                         </div>
+
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mt-6">
+                    <div class="border-b border-slate-100 pb-4 mb-4">
+                        <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">💾 النسخ الاحتياطي واستعادة البيانات</h3>
+                        <p class="text-sm font-bold text-slate-500 mt-2">احفظ نسخة من كل بيانات النظام (الوكلاء، الأجهزة، الطلبات، الخ) بجهازك لضمان عدم ضياعها.</p>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <button type="button" onclick="exportBackup()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-black text-lg shadow-md transition flex items-center justify-center gap-2 active:scale-95">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            تحميل نسخة احتياطية
+                        </button>
+                        <label class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-xl font-black text-lg shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            استعادة بيانات من ملف
+                            <input type="file" id="backupFileInput" accept=".json" class="hidden" onchange="importBackup(event)">
+                        </label>
+                    </div>
+                </div>
                     </form>
                 </div>
 
@@ -302,7 +320,7 @@
 
                 <div id="inventorySection" class="section-content hidden w-full">
                     <div class="flex justify-end mb-4">
-                        <button onclick="openInternalOrderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-black flex items-center gap-2 transition shadow-lg shadow-indigo-200">
+                        <button id="btnInternalOrder" onclick="openInternalOrderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-black flex items-center gap-2 transition shadow-lg shadow-indigo-200">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                             أمر تصنيع للمخزن 📦
                         </button>
@@ -583,7 +601,7 @@
                             <input type="checkbox" id="chk_pay_v" class="perm-checkbox" onchange="toggleSubPerms(this,'pay')"> التسديدات المالية
                         </label>
                         <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
-                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_pend_v" class="perm-sub-checkbox pay-sub"> رؤية (طلبات التسديد)</label>
+                            
                             <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_hist_v" class="perm-sub-checkbox pay-sub"> رؤية (سجل التسديدات)</label>
                             <div class="border-t border-slate-100 my-1"></div>
                             <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_a" class="perm-sub-checkbox pay-sub"> زر (تأكيد وتحديث الصندوق)</label>
@@ -705,10 +723,11 @@
             document.getElementById('tabCompletedOrders').style.display = p.ord_comp_v ? 'block' : 'none';
             document.getElementById('tabMissingOrders').style.display = p.ord_miss_v ? 'block' : 'none';
 
-            document.getElementById('tabPendingPay').style.display = p.pay_pend_v ? 'block' : 'none';
+            document.getElementById('tabPendingPay').style.display = 'none';
             document.getElementById('tabHistoryPay').style.display = p.pay_hist_v ? 'block' : 'none';
 
-            let firstTab = p.dash ? 'dashboard' : (p.prod_v ? 'inventory' : (p.ord_v ? 'orders' : (p.tech_portal ? 'myTasks' : (p.agt_v ? 'agents' : 'dashboard')))); 
+            let firstTab = p.dash ? 'dashboard' : (p.prod_v ? 'inventory' : (p.ord_v ? 'orders' : (p.tech_portal ? 'myTasks' : (p.agt_v ? 'agents' : 'dashboard'))));
+            if(document.getElementById('btnInternalOrder')) document.getElementById('btnInternalOrder').style.display = p.prod_a ? 'flex' : 'none'; 
             switchTab(firstTab);
         }
 
@@ -1145,14 +1164,13 @@
                     prod_v: document.getElementById('chk_prod_v').checked, prod_a: document.getElementById('chk_prod_a').checked, prod_e: document.getElementById('chk_prod_e').checked, prod_d: document.getElementById('chk_prod_d').checked, 
                     ord_v: document.getElementById('chk_ord_v').checked, ord_pending_v: document.getElementById('chk_ord_pending_v').checked, ord_comp_v: document.getElementById('chk_ord_comp_v').checked, ord_miss_v: document.getElementById('chk_ord_miss_v').checked, ord_e: document.getElementById('chk_ord_e').checked, 
                     ret_v: document.getElementById('chk_ret_v').checked, ret_a: document.getElementById('chk_ret_a').checked, 
-                    pay_v: document.getElementById('chk_pay_v').checked, pay_a: document.getElementById('chk_pay_a').checked, pay_d: document.getElementById('chk_pay_d').checked, pay_hist_v: document.getElementById('chk_pay_hist_v').checked, pay_pend_v: document.getElementById('chk_pay_pend_v').checked,
+                    pay_v: document.getElementById('chk_pay_v').checked, pay_a: document.getElementById('chk_pay_a').checked, pay_d: document.getElementById('chk_pay_d').checked, pay_hist_v: document.getElementById('chk_pay_hist_v').checked,
                     exp_v: document.getElementById('chk_exp_v').checked, exp_a: document.getElementById('chk_exp_a').checked, exp_e: document.getElementById('chk_exp_e').checked, exp_d: document.getElementById('chk_exp_d').checked, 
                     agt_v: document.getElementById('chk_agt_v').checked, agt_a: document.getElementById('chk_agt_a').checked, agt_e: document.getElementById('chk_agt_e').checked, agt_d: document.getElementById('chk_agt_d').checked, 
                     emp_v: document.getElementById('chk_emp_v').checked, emp_a: document.getElementById('chk_emp_a').checked, emp_e: document.getElementById('chk_emp_e').checked, emp_d: document.getElementById('chk_emp_d').checked,
-                                        tech_portal: document.getElementById('chk_tech_portal').checked,
+                    tech_portal: document.getElementById('chk_tech_portal').checked,
                     settings_v: document.getElementById('chk_settings_v').checked,
                     pricing_v: document.getElementById('chk_pricing_v').checked
-
                 } 
             }; 
             if(editEmpId) { 
@@ -1172,7 +1190,7 @@
             document.getElementById('chk_prod_v').checked = !!p.prod_v; document.getElementById('chk_prod_a').checked = !!p.prod_a; document.getElementById('chk_prod_e').checked = !!p.prod_e; document.getElementById('chk_prod_d').checked = !!p.prod_d; 
             document.getElementById('chk_ord_v').checked = !!p.ord_v; document.getElementById('chk_ord_pending_v').checked = !!p.ord_pending_v; document.getElementById('chk_ord_comp_v').checked = !!p.ord_comp_v; document.getElementById('chk_ord_miss_v').checked = !!p.ord_miss_v; document.getElementById('chk_ord_e').checked = !!p.ord_e; 
             document.getElementById('chk_ret_v').checked = !!p.ret_v; document.getElementById('chk_ret_a').checked = !!p.ret_a; 
-            document.getElementById('chk_pay_v').checked = !!p.pay_v; document.getElementById('chk_pay_a').checked = !!p.pay_a; document.getElementById('chk_pay_d').checked = !!p.pay_d; document.getElementById('chk_pay_hist_v').checked = !!p.pay_hist_v; document.getElementById('chk_pay_pend_v').checked = !!p.pay_pend_v;
+            document.getElementById('chk_pay_v').checked = !!p.pay_v; document.getElementById('chk_pay_a').checked = !!p.pay_a; document.getElementById('chk_pay_d').checked = !!p.pay_d; document.getElementById('chk_pay_hist_v').checked = !!p.pay_hist_v;
             document.getElementById('chk_exp_v').checked = !!p.exp_v; document.getElementById('chk_exp_a').checked = !!p.exp_a; document.getElementById('chk_exp_e').checked = !!p.exp_e; document.getElementById('chk_exp_d').checked = !!p.exp_d; 
             document.getElementById('chk_agt_v').checked = !!p.agt_v; document.getElementById('chk_agt_a').checked = !!p.agt_a; document.getElementById('chk_agt_e').checked = !!p.agt_e; document.getElementById('chk_agt_d').checked = !!p.agt_d; 
             document.getElementById('chk_emp_v').checked = !!p.emp_v; document.getElementById('chk_emp_a').checked = !!p.emp_a; document.getElementById('chk_emp_e').checked = !!p.emp_e; document.getElementById('chk_emp_d').checked = !!p.emp_d;
@@ -1182,7 +1200,6 @@
 
             document.getElementById('empFormTitle').innerHTML=`تعديل بيانات الموظف`; document.getElementById('btnCancelEmp').classList.remove('hidden'); window.scrollTo(0,0); openPermModal(); 
         }
-
 
         function cancelEmpEdit() { editEmpId=null; document.getElementById('addEmployeeForm').reset(); document.querySelectorAll('.perm-checkbox, .perm-sub-checkbox').forEach(c => c.checked = false); document.getElementById('empFormTitle').innerHTML=`إضافة موظف`; document.getElementById('btnCancelEmp').classList.add('hidden'); }
 
@@ -1224,8 +1241,8 @@
                 pricingHtml += `
                 <tr class="hover:bg-blue-50/50 transition cursor-pointer" onclick="editProduct(${pr.id})" title="اضغط لتعديل هذا الجهاز">
                     <td class="p-4 border-l border-slate-100 font-black text-blue-700">${pr.name}</td>
-                    <td class="p-4 border-l border-slate-100 font-bold text-slate-700">${pr.brand || 'عام'}</td>
-                    <td class="p-4 border-l border-slate-100 font-black text-indigo-600 bg-indigo-50/50 text-center">${pr.ready_qty || 0}</td>
+                    <td class="p-4 border-l border-slate-100">${pr.brand || 'عام'}</td>
+                    <td class="p-4 border-l border-slate-100 text-center">${pr.ready_qty || 0}</td>
                     <td class="p-4 border-l border-slate-100">${matCost.toLocaleString()}</td>
                     <td class="p-4 border-l border-slate-100">${mfgCost.toLocaleString()}</td>
                     <td class="p-4 border-l border-slate-100">${testCost.toLocaleString()}</td>
@@ -1357,7 +1374,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
 
             pc.innerHTML = pend.length ? '' : '<div class="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100"><p class="font-bold text-slate-400">لا توجد طلبات تسديد جديدة قيد الانتظار.</p></div>';
             document.getElementById('paymentsBadge').innerText = pend.length; 
-            document.getElementById('paymentsBadge').style.display = pend.length ? 'block' : 'none';
+            document.getElementById('paymentsBadge').style.display = 'none';
             
             pend.forEach(pm => { 
                 pc.innerHTML += `<div class="bg-white p-5 rounded-2xl border-r-8 border-emerald-500 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-4"><div><p class="font-black text-slate-800 text-xl">${pm.agentName}</p><p class="text-xs font-black text-slate-400 mt-1">تاريخ الرفع: ${pm.date || '-'}</p><p class="text-3xl font-black text-emerald-600 mt-2">${pm.amount.toLocaleString()} د.ع</p><p class="text-xs font-bold text-slate-500 mt-2 bg-slate-50 p-2 rounded border border-slate-200 inline-block">الملاحظة: ${pm.note || 'بدون'}</p></div><div class="flex flex-col gap-2 w-full md:w-auto">${p.pay_a ? `<button onclick="approvePayment(${pm.id})" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-black shadow-md text-sm transition flex items-center justify-center gap-1.5">تأكيد وتحديث الصندوق</button>` : ''}${p.pay_d ? `<button onclick="deletePayment(${pm.id})" class="bg-slate-100 hover:bg-rose-50 text-rose-600 px-6 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-1.5">إلغاء ورفض</button>` : ''}</div></div>`; 
@@ -1832,9 +1849,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             }
 
             if(id === 'payments') { 
-                let p = currentUser.perms || {};
-                if(p.pay_pend_v) switchPaymentTab('pending');
-                else if(p.pay_hist_v) switchPaymentTab('history');
+                switchPaymentTab('history'); // يفتح السجل مباشرة
             }
 
             if(window.innerWidth < 768) toggleSidebar(); 
@@ -1910,8 +1925,11 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             let product = products.find(p => String(p.id) === String(productId));
             if(!product) return;
 
+            // جلب أعلى رقم طلب موجود وزيادة 1 (حتى يصير الترقيم تسلسلي)
+            let nextId = orders.length > 0 ? Math.max(...orders.map(o => parseInt(o.id) || 0)) + 1 : 1;
+
             let newOrder = {
-                id: Date.now() + Math.floor(Math.random() * 1000),
+                id: nextId,
                 agentId: 'internal_store',
                 agentName: 'المخزن الرئيسي (رصيد جاهز)',
                 date: getNow(),
@@ -1927,6 +1945,59 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             closeInternalOrderModal();
             showToast('تم إرسال أمر التصنيع إلى ورشة العمل بنجاح! 🚀');
         }
+        // ==========================================
+        // نظام النسخ الاحتياطي واستعادة البيانات
+        // ==========================================
+        function exportBackup() {
+            let backupData = { products, agents, orders, returns, payments, expenses, employees, rawMaterials, stats, systemSettings };
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+            let downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "Fadak_Backup_" + getNow().replace(/[: \-]/g, "_") + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            showToast("تم تحميل النسخة الاحتياطية بنجاح! 💾");
+        }
+
+        function importBackup(event) {
+            let file = event.target.files[0]; // التعديل هنا ضفنا
+            if (!file) return;
+            if(!confirm("تحذير ⚠️: استعادة البيانات ستقوم بمسح كل البيانات الحالية واستبدالها ببيانات الملف. هل أنت متأكد؟")) {
+                event.target.value = ""; return;
+            }
+            
+            let reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    let importedData = JSON.parse(e.target.result);
+                    if(importedData.products && importedData.agents) {
+                        toggleLoader(true);
+                        await saveDataBulk([
+                            {key: 'products', data: importedData.products},
+                            {key: 'agents', data: importedData.agents},
+                            {key: 'orders', data: importedData.orders || []},
+                            {key: 'returns', data: importedData.returns || []},
+                            {key: 'payments', data: importedData.payments || []},
+                            {key: 'expenses', data: importedData.expenses || []},
+                            {key: 'employees', data: importedData.employees || []},
+                            {key: 'rawMaterials', data: importedData.rawMaterials || []},
+                            {key: 'stats', data: importedData.stats || {sales:0,cash:0}},
+                            {key: 'systemSettings', data: importedData.systemSettings || {marketing:5,transport:2,profit:25}}
+                        ]);
+                        showToast("تمت استعادة البيانات بنجاح! يتم الآن تحديث النظام...");
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showToast("ملف النسخة الاحتياطية غير صالح!", "error");
+                    }
+                } catch(err) {
+                    showToast("حدث خطأ أثناء قراءة الملف!", "error");
+                }
+                event.target.value = "";
+            };
+            reader.readAsText(file);
+        }
+
     </script>
 </body>
 </html>
