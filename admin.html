@@ -176,6 +176,7 @@
                                 <tr>
                                     <th class="p-4 border-l border-slate-700">اسم الجهاز</th>
                                     <th class="p-4 border-l border-slate-700 text-blue-300">العلامة التجارية</th>
+                                    <th class="p-4 text-right font-black text-indigo-300">الرصيد الجاهز 📦</th>
                                     <th class="p-4 border-l border-slate-700">تكلفة المواد</th>
                                     <th class="p-4 border-l border-slate-700">أجر التصنيع</th>
                                     <th class="p-4 border-l border-slate-700">أجر الفحص</th>
@@ -300,6 +301,12 @@
                 </div>
 
                 <div id="inventorySection" class="section-content hidden w-full">
+                    <div class="flex justify-end mb-4">
+                        <button onclick="openInternalOrderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-black flex items-center gap-2 transition shadow-lg shadow-indigo-200">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            أمر تصنيع للمخزن 📦
+                        </button>
+                    </div>
                     <div class="bg-white rounded-3xl shadow-sm border overflow-x-auto scroll-touch">
                         <table class="w-full text-right min-w-[700px]">
                             <thead class="bg-slate-50 text-slate-500 text-sm border-b">
@@ -411,13 +418,20 @@
                 </div>
 
                 <div id="myTasksSection" class="section-content hidden space-y-6 w-full">
-                    <div class="bg-indigo-50 border border-indigo-200 p-6 rounded-2xl shadow-sm flex items-center justify-between">
-                        <div>
+                    <div class="bg-indigo-50 border border-indigo-200 p-5 md:p-6 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                        <div class="text-center md:text-right">
                             <h3 class="text-xl font-black text-indigo-800">أهلاً بك في ورشة العمل</h3>
                             <p class="text-sm font-bold text-indigo-600 mt-1">رصيد أجورك الحالي: <span id="techBalanceDisplay" class="text-2xl font-black">0</span> د.ع</p>
                         </div>
+                        <div class="flex flex-wrap justify-center gap-2 bg-white p-1.5 rounded-xl shadow-sm border border-indigo-100 w-full md:w-auto">
+                            <button onclick="switchTechTab('active')" id="tabTechActive" class="px-4 py-2 rounded-lg font-black text-sm bg-indigo-600 text-white shadow-md transition flex-1 md:flex-none">المهام الحالية</button>
+                            <button onclick="switchTechTab('archive')" id="tabTechArchive" class="px-4 py-2 rounded-lg font-black text-sm text-slate-600 hover:bg-slate-50 transition flex-1 md:flex-none">الأرشيف</button>
+                            <button onclick="switchTechTab('payments')" id="tabTechPayments" class="px-4 py-2 rounded-lg font-black text-sm text-slate-600 hover:bg-slate-50 transition flex-1 md:flex-none">سجل الدفعات</button>
+                        </div>
                     </div>
                     <div id="myTasksList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <div id="techArchiveList" class="hidden flex-col gap-3"></div>
+                    <div id="techPaymentsList" class="hidden flex-col gap-3"></div>
                 </div>
 
             </div>
@@ -1211,6 +1225,7 @@
                 <tr class="hover:bg-blue-50/50 transition cursor-pointer" onclick="editProduct(${pr.id})" title="اضغط لتعديل هذا الجهاز">
                     <td class="p-4 border-l border-slate-100 font-black text-blue-700">${pr.name}</td>
                     <td class="p-4 border-l border-slate-100 font-bold text-slate-700">${pr.brand || 'عام'}</td>
+                    <td class="p-4 border-l border-slate-100 font-black text-indigo-600 bg-indigo-50/50 text-center">${pr.ready_qty || 0}</td>
                     <td class="p-4 border-l border-slate-100">${matCost.toLocaleString()}</td>
                     <td class="p-4 border-l border-slate-100">${mfgCost.toLocaleString()}</td>
                     <td class="p-4 border-l border-slate-100">${testCost.toLocaleString()}</td>
@@ -1257,7 +1272,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             let completedO = orders.filter(o => o.status === 'delivered');
             document.getElementById('ordersBadge').innerText = activeO.length; document.getElementById('ordersBadge').style.display = activeO.length ? 'block' : 'none';
             
-            document.getElementById('pendingOrdersTbody').innerHTML = activeO.length ? activeO.map((o) => {
+            document.getElementById('pendingOrdersTbody').innerHTML = activeO.length ? [...activeO].reverse().map((o) => {
                 let itemsList = o.items.map(item => {
                     let mfgStatusText = '';
                     let assignBtn = '';
@@ -1313,7 +1328,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             }).join('') : '<tr><td colspan="5" class="text-center font-bold text-slate-400 p-8">لا توجد سجلات.</td></tr>';
 
             let missingOrdersHtml = '';
-            completedO.forEach(o => {
+            [...completedO].reverse().forEach(o => {
                 let missingItemsForThisOrder = o.items.filter(item => (item.requested_qty || item.qty) > (item.delivered_qty || 0));
                 if (missingItemsForThisOrder.length > 0) {
                     let itemsList = missingItemsForThisOrder.map(item => { 
@@ -1405,87 +1420,95 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             
             renderChart(stats.sales, totalExp); filterOrders();
         }
+        function switchTechTab(tab) {
+            document.getElementById('tabTechActive').className = 'px-4 py-2 rounded-lg font-black text-sm transition flex-1 md:flex-none ' + (tab === 'active' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50');
+            document.getElementById('tabTechArchive').className = 'px-4 py-2 rounded-lg font-black text-sm transition flex-1 md:flex-none ' + (tab === 'archive' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50');
+            document.getElementById('tabTechPayments').className = 'px-4 py-2 rounded-lg font-black text-sm transition flex-1 md:flex-none ' + (tab === 'payments' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50');
+
+            document.getElementById('myTasksList').style.display = tab === 'active' ? 'grid' : 'none';
+            document.getElementById('techArchiveList').style.display = tab === 'archive' ? 'flex' : 'none';
+            document.getElementById('techPaymentsList').style.display = tab === 'payments' ? 'flex' : 'none';
+        }
 
         function loadMyTasks() {
             let list = document.getElementById('myTasksList');
-            list.innerHTML = '';
-            let hasTasks = false;
+            let archiveList = document.getElementById('techArchiveList');
+            let paymentsList = document.getElementById('techPaymentsList');
+            
+            // متغيرات لتجميع البيانات بدون إرهاق المتصفح
+            let listHtml = ''; let archiveHtml = ''; let paymentsHtml = '';
+            let hasTasks = false, hasArchive = false, hasPayments = false;
+            
             let me = employees.find(e => e.id === currentUser.id);
             if(me) currentUser.balance = me.balance || 0;
             document.getElementById('techBalanceDisplay').innerText = (currentUser.balance || 0).toLocaleString();
 
+            // 1. جلب المهام (الحالية والأرشيف)
             orders.forEach(o => {
                 o.items.forEach(item => {
                     if (String(item.tech_id) === String(currentUser.id)) {
                         let reqQty = item.requested_qty || item.qty;
-                        if (item.mfg_status === 'assigned') {
+                        
+                        if (item.mfg_status === 'tested') {
+                            hasArchive = true;
+                            let totalEarned = ((item.mfg_fee || 0) + (item.test_fee || 0)) * reqQty;
+                            archiveHtml += `
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+                                    <div><h4 class="font-black text-slate-800">${item.name}</h4><p class="text-xs font-bold text-slate-500 mt-1">العدد المنجز: ${reqQty} | من طلب #${o.id}</p></div>
+                                </div>
+                                <div class="text-center"><span class="block text-xs font-bold text-slate-400">الأجر المستلم</span><span class="font-black text-emerald-600 text-lg">${totalEarned.toLocaleString()} د.ع</span></div>
+                            </div>`;
+                        } else if (item.mfg_status === 'assigned') {
                             hasTasks = true;
-                            list.innerHTML += `
+                            listHtml += `
                             <div class="bg-amber-50 border border-amber-200 p-5 rounded-2xl shadow-sm flex flex-col gap-3">
                                 <div class="flex gap-3 items-center">
                                     <img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 bg-white p-0.5">
-                                    <div>
-                                        <h4 class="font-black text-amber-800 text-lg">${item.name}</h4>
-                                        <p class="text-xs font-bold text-amber-600">العدد المطلوب: <span class="text-rose-500">${reqQty}</span></p>
-                                    </div>
+                                    <div><h4 class="font-black text-amber-800 text-lg">${item.name}</h4><p class="text-xs font-bold text-amber-600">العدد المطلوب: <span class="text-rose-500">${reqQty}</span></p></div>
                                 </div>
-                                <div class="bg-white p-3 rounded-xl border border-amber-100 text-center">
-                                    <p class="font-black text-amber-600 text-sm">تمت إحالة الطلب لك 🔔</p>
-                                    <p class="font-bold text-slate-500 text-xs mt-1">يرجى التوجه للمخزن لاستلام المواد للبدء بالتصنيع.</p>
-                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-amber-100 text-center"><p class="font-black text-amber-600 text-sm">تمت إحالة الطلب لك 🔔</p><p class="font-bold text-slate-500 text-xs mt-1">يرجى التوجه للمخزن لاستلام المواد للبدء بالتصنيع.</p></div>
                             </div>`;
                         } else if (item.mfg_status === 'in_progress') {
-                            hasTasks = true;
-                            let earn = (item.mfg_fee || 0) * reqQty;
-                            list.innerHTML += `
+                            hasTasks = true; let earn = (item.mfg_fee || 0) * reqQty;
+                            listHtml += `
                             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex gap-3 items-center">
-                                        <img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5">
-                                        <div>
-                                            <h4 class="font-black text-slate-800 text-lg">${item.name}</h4>
-                                            <p class="text-xs font-bold text-slate-400">من طلب #${o.id} | العدد: <span class="text-rose-500">${reqQty}</span></p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center mt-2">
-                                    <span class="text-sm font-bold text-blue-800">أجر التصنيع الإجمالي:</span>
-                                    <span class="font-black text-blue-700 text-lg">${earn.toLocaleString()} د.ع</span>
-                                </div>
-                                <button onclick="markAsManufactured(${o.id}, ${item.id}, ${earn})" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">
-                                    تأكيد إتمام التصنيع
-                                </button>
+                                <div class="flex justify-between items-start"><div class="flex gap-3 items-center"><img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5"><div><h4 class="font-black text-slate-800 text-lg">${item.name}</h4><p class="text-xs font-bold text-slate-400">من طلب #${o.id} | العدد: <span class="text-rose-500">${reqQty}</span></p></div></div></div>
+                                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center mt-2"><span class="text-sm font-bold text-blue-800">أجر التصنيع الإجمالي:</span><span class="font-black text-blue-700 text-lg">${earn.toLocaleString()} د.ع</span></div>
+                                <button onclick="markAsManufactured(${o.id}, ${item.id}, ${earn})" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">تأكيد إتمام التصنيع</button>
                             </div>`;
                         } else if (item.mfg_status === 'manufactured') {
-                            hasTasks = true;
-                            let earn = (item.test_fee || 0) * reqQty;
-                            list.innerHTML += `
+                            hasTasks = true; let earn = (item.test_fee || 0) * reqQty;
+                            listHtml += `
                             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex gap-3 items-center">
-                                        <img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5">
-                                        <div>
-                                            <h4 class="font-black text-slate-800 text-lg">${item.name}</h4>
-                                            <p class="text-xs font-bold text-slate-400">مرحلة الفحص | العدد: <span class="text-emerald-500">${reqQty}</span></p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center mt-2">
-                                    <span class="text-sm font-bold text-emerald-800">أجر الفحص الإجمالي:</span>
-                                    <span class="font-black text-emerald-700 text-lg">${earn.toLocaleString()} د.ع</span>
-                                </div>
-                                <button onclick="markAsTested(${o.id}, ${item.id}, ${earn})" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">
-                                    تأكيد إتمام الفحص
-                                </button>
+                                <div class="flex justify-between items-start"><div class="flex gap-3 items-center"><img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5"><div><h4 class="font-black text-slate-800 text-lg">${item.name}</h4><p class="text-xs font-bold text-slate-400">مرحلة الفحص | العدد: <span class="text-emerald-500">${reqQty}</span></p></div></div></div>
+                                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center mt-2"><span class="text-sm font-bold text-emerald-800">أجر الفحص الإجمالي:</span><span class="font-black text-emerald-700 text-lg">${earn.toLocaleString()} د.ع</span></div>
+                                <button onclick="markAsTested(${o.id}, ${item.id}, ${earn})" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">تأكيد إتمام الفحص</button>
                             </div>`;
                         }
                     }
                 });
             });
 
-            if(!hasTasks) {
-                list.innerHTML = `<div class="col-span-full bg-slate-50 p-10 rounded-2xl border border-slate-200 text-center"><p class="text-slate-500 font-bold">لا توجد مهام تصنيع أو فحص مسندة إليك حالياً.</p></div>`;
-            }
+            // 2. جلب الدفعات المستلمة
+            let myPayments = expenses.filter(ex => ex.note.includes(currentUser.name) && ex.note.includes('تسديد أجور'));
+            myPayments.reverse().forEach(pm => {
+                hasPayments = true;
+                paymentsHtml += `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-100 text-blue-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                        <div><h4 class="font-black text-slate-800">دفعة مستلمة (نقد)</h4><p class="text-xs font-bold text-slate-500 mt-1">تاريخ الاستلام: ${pm.date}</p></div>
+                    </div>
+                    <div class="font-black text-blue-600 text-xl">${pm.amount.toLocaleString()} د.ع</div>
+                </div>`;
+            });
+
+            // 3. طباعة البيانات للشاشة دفعة واحدة (هنا يكمن تسريع النظام)
+            list.innerHTML = hasTasks ? listHtml : `<div class="col-span-full bg-slate-50 p-10 rounded-2xl border border-slate-200 text-center"><p class="text-slate-500 font-bold">لا توجد مهام حالية مسندة إليك.</p></div>`;
+            archiveList.innerHTML = hasArchive ? archiveHtml : `<div class="bg-slate-50 p-10 rounded-2xl border border-slate-200 text-center"><p class="text-slate-500 font-bold">لم تنجز أي أجهزة حتى الآن.</p></div>`;
+            paymentsList.innerHTML = hasPayments ? paymentsHtml : `<div class="bg-slate-50 p-10 rounded-2xl border border-slate-200 text-center"><p class="text-slate-500 font-bold">لم يتم تسجيل أي دفعات لك بعد.</p></div>`;
         }
 
         async function markAsManufactured(orderId, itemId, earnAmount) {
@@ -1504,14 +1527,25 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
 
         async function markAsTested(orderId, itemId, earnAmount) {
             if(confirm("هل تم فحص الأجهزة بالكامل وهي جاهزة للوكيل؟")) {
-                let order = orders.find(o => o.id === orderId);
-                let item = order.items.find(i => i.id === itemId);
+                let order = orders.find(o => String(o.id) === String(orderId));
+                let item = order.items.find(i => String(i.id) === String(itemId));
                 let emp = employees.find(e => e.id === currentUser.id);
                 item.mfg_status = 'tested';
                 emp.balance = (emp.balance || 0) + earnAmount;
                 currentUser.balance = emp.balance;
+                
+                // --- الذكاء: إذا كان الأمر تصنيع داخلي ---
+                if (order.agentId === 'internal_store') {
+                    let product = products.find(p => String(p.id) === String(item.id));
+                    if (product) {
+                        product.ready_qty = (product.ready_qty || 0) + item.qty;
+                        order.status = 'delivered'; // إخفاء الأمر واعتباره مكتمل
+                    }
+                }
+                // ----------------------------------------
+
                 updateUI();
-                await saveDataBulk([{key: 'orders', data: orders}, {key: 'employees', data: employees}]);
+                await saveDataBulk([{key: 'orders', data: orders}, {key: 'employees', data: employees}, {key: 'products', data: products}]);
                 showToast(`تم الفحص! أُضيف ${earnAmount.toLocaleString()} لرصيدك.`);
             }
         }
@@ -1831,7 +1865,68 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             if(navSettings) navSettings.style.display = (currentUser && currentUser.username === 'admin') ? 'flex' : 'none';
         };
 
+// ==========================================
+        // نظام أوامر التصنيع الداخلي (للمخزن)
+        // ==========================================
+        document.body.insertAdjacentHTML('beforeend', `
+        <div id="internalOrderModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border-t-8 border-indigo-500">
+                <h3 class="text-xl font-black text-slate-800 mb-4 border-b pb-3">أمر تصنيع للمخزن 📦</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2">اختر الجهاز المطلوب تصنيعه:</label>
+                        <select id="intProductId" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-700 outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2">الكمية المطلوبة:</label>
+                        <input type="number" id="intQty" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-700 outline-none" placeholder="مثال: 50">
+                    </div>
+                </div>
+                <div class="mt-6 flex gap-3">
+                    <button onclick="submitInternalOrder()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-black transition shadow-lg">إرسال لورشة التصنيع</button>
+                    <button onclick="closeInternalOrderModal()" class="w-24 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold transition">إلغاء</button>
+                </div>
+            </div>
+        </div>`);
 
+        function openInternalOrderModal() {
+            let select = document.getElementById('intProductId');
+            select.innerHTML = '<option value="">-- اختر الجهاز --</option>' + products.map(p => `<option value="${p.id}">${p.name} (${p.brand || 'عام'})</option>`).join('');
+            document.getElementById('intQty').value = '';
+            document.getElementById('internalOrderModal').classList.remove('hidden');
+            document.getElementById('internalOrderModal').classList.add('flex');
+        }
+
+        function closeInternalOrderModal() {
+            document.getElementById('internalOrderModal').classList.add('hidden');
+            document.getElementById('internalOrderModal').classList.remove('flex');
+        }
+
+        async function submitInternalOrder() {
+            let productId = parseInt(document.getElementById('intProductId').value);
+            let qty = parseInt(document.getElementById('intQty').value);
+            if(!productId || isNaN(qty) || qty <= 0) return showToast('يرجى تحديد الجهاز والكمية بشكل صحيح!', 'error');
+
+            let product = products.find(p => String(p.id) === String(productId));
+            if(!product) return;
+
+            let newOrder = {
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                agentId: 'internal_store',
+                agentName: 'المخزن الرئيسي (رصيد جاهز)',
+                date: getNow(),
+                total: 0, 
+                cash_received: 0,
+                status: 'pending',
+                items: [{ ...product, qty: qty, requested_qty: qty, mfg_status: 'pending' }]
+            };
+
+            orders.push(newOrder);
+            updateUI();
+            await saveDataBulk([{key:'orders', data:orders}]);
+            closeInternalOrderModal();
+            showToast('تم إرسال أمر التصنيع إلى ورشة العمل بنجاح! 🚀');
+        }
     </script>
 </body>
 </html>
