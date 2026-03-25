@@ -605,7 +605,8 @@
             console.log('تم التثبيت بنجاح!');
         });
     </script>
-    <div id="installBanner" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-4 z- flex items-center justify-between transform translate-y-full transition-transform duration-300 hidden safe-bottom">
+    <div id="installBanner" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-4 z-50 flex items-center justify-between transform translate-y-full transition-transform duration-300 hidden safe-bottom">
+
         <div class="flex items-center gap-3">
             <img src="icon.png" class="w-10 h-10 rounded-xl" alt="App Icon">
             <div>
@@ -619,7 +620,8 @@
         </button>
     </div>
 
-    <div id="iosInstallModal" class="fixed inset-0 bg-slate-900/80 z- hidden flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
+    <div id="iosInstallModal" class="fixed inset-0 bg-slate-900/80 z-50 hidden flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
+
         <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 shadow-2xl relative animate-[slideInUp_0.3s_ease-out]">
             <button onclick="dismissIosPrompt()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             <div class="text-center mt-2">
@@ -631,30 +633,6 @@
         </div>
     </div>
 
-   <div id="installBanner" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-4 z- flex items-center justify-between transform translate-y-full transition-transform duration-300 hidden safe-bottom">
-        <div class="flex items-center gap-3">
-            <img src="icon.png" class="w-10 h-10 rounded-xl" alt="App Icon">
-            <div>
-                <h4 class="font-bold text-sm">تطبيق شركة فدك</h4>
-                <p class="text-xs text-slate-400">ثبت التطبيق للوصول السريع بدون متصفح</p>
-            </div>
-        </div>
-        <button id="installBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-black text-sm transition shadow-lg">تثبيت</button>
-        <button id="closeInstallBtn" class="text-slate-400 hover:text-white absolute top-1 left-2 p-2">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-    </div>
 
-    <div id="iosInstallModal" class="fixed inset-0 bg-slate-900/80 z- hidden flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 shadow-2xl relative animate-[slideInUp_0.3s_ease-out]">
-            <button onclick="dismissIosPrompt()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            <div class="text-center mt-2">
-                <img src="icon.png" class="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-md border border-slate-100">
-                <h3 class="text-xl font-black text-slate-800 mb-2">تثبيت التطبيق (الآيفون)</h3>
-                <p class="text-sm font-bold text-slate-500 mb-6 leading-relaxed">لتثبيت التطبيق على جهازك، اضغط على زر المشاركة <svg class="inline w-5 h-5 text-blue-500 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> بالأسفل ثم اختر <br><b class="text-slate-700">"إضافة للشاشة الرئيسية"</b>.</p>
-                <button onclick="dismissIosPrompt()" class="w-full bg-slate-100 text-slate-700 font-black py-4 rounded-xl hover:bg-slate-200 transition">حسناً، فهمت</button>
-            </div>
-        </div>
-    </div> 
 </body>
 </html>
