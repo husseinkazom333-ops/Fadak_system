@@ -246,7 +246,7 @@
     </div>
 
     <div id="overlay" onclick="toggleCart()" class="fixed inset-0 bg-slate-900/60 z-40 hidden backdrop-blur-sm"></div>
-    <div id="cartDrawer" class="fixed top-0 left-0 w-[90%] sm:w-96 h-full bg-slate-50 shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 flex flex-col rounded-r-[2rem]">
+        <div id="cartDrawer" class="fixed top-0 left-0 w-[90%] sm:w-96 h-full bg-slate-50 shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 flex flex-col rounded-r-[2rem]">
         <div class="p-6 border-b border-slate-200 bg-white flex justify-between items-center rounded-tr-[2rem] shadow-sm z-10">
             <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
                 <svg class="w-6 h-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
@@ -264,16 +264,41 @@
         </div>
     </div>
 
+    <div id="installBanner" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-4 z-50 flex items-center justify-between transform translate-y-full transition-transform duration-300 hidden safe-bottom">
+        <div class="flex items-center gap-3">
+            <img src="icon.png" class="w-10 h-10 rounded-xl" alt="App Icon">
+            <div>
+                <h4 class="font-bold text-sm">شركة فدك</h4>
+                <p class="text-xs text-slate-400">ثبت التطبيق للوصول السريع بدون متصفح</p>
+            </div>
+        </div>
+        <button id="installBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-black text-sm transition shadow-lg">تثبيت</button>
+        <button id="closeInstallBtn" class="text-slate-400 hover:text-white absolute top-1 left-2 p-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
+
+    <div id="iosInstallModal" class="fixed inset-0 bg-slate-900/80 z-50 hidden flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 shadow-2xl relative animate-[slideInUp_0.3s_ease-out]">
+            <button onclick="dismissIosPrompt()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            <div class="text-center mt-2">
+                <img src="icon.png" class="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-md border border-slate-100">
+                <h3 class="text-xl font-black text-slate-800 mb-2">تثبيت التطبيق (الآيفون)</h3>
+                <p class="text-sm font-bold text-slate-500 mb-6 leading-relaxed">لتثبيت التطبيق على جهازك، اضغط على زر المشاركة <svg class="inline w-5 h-5 text-blue-500 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> بالأسفل ثم اختر <br><b class="text-slate-700">"إضافة للشاشة الرئيسية"</b>.</p>
+                <button onclick="dismissIosPrompt()" class="w-full bg-slate-100 text-slate-700 font-black py-4 rounded-xl hover:bg-slate-200 transition">حسناً، فهمت</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const getNow = () => { const d = new Date(); return `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2, '0')}`; };
-        let API_URL = "https://husseinkazom.pythonanywhere.com/api"; if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:") { API_URL = "http://127.0.0.1:5000/api"; }
+        let API_URL = "https://husseinkazom.pythonanywhere.com/api"; 
+if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:") { API_URL = "http://127.0.0.1:5000/api"; }
         let agent = null; let products = []; let cart = []; let lastDbHash = ""; let agentOrders = []; let agentPayments = []; let currentModalProductId = null;
 
         function showToast(message, type = 'success') { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); const bg = type === 'success' ? 'bg-emerald-500' : (type === 'error' ? 'bg-rose-500' : 'bg-blue-500'); toast.className = `${bg} text-white px-5 py-3 rounded-xl font-bold shadow-xl flex items-center gap-3 toast-enter pointer-events-auto text-sm w-fit max-w-[90%] text-center border border-white/20`; toast.innerHTML = type === 'success' ? `<svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg> <span>${message}</span>` : `<svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg> <span>${message}</span>`; container.appendChild(toast); setTimeout(() => { toast.classList.replace('toast-enter', 'toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000); }
         
-        let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; const installBtn = document.getElementById('installAppBtn'); if (installBtn) installBtn.classList.remove('hidden'); }); async function installPWA() { if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') document.getElementById('installAppBtn').classList.add('hidden'); deferredPrompt = null; } } if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
-
+        
         async function fetchUpdates() {
             if(!agent) return;
             try {
@@ -605,33 +630,7 @@
             console.log('تم التثبيت بنجاح!');
         });
     </script>
-    <div id="installBanner" class="fixed bottom-0 left-0 w-full bg-slate-900 text-white p-4 z-50 flex items-center justify-between transform translate-y-full transition-transform duration-300 hidden safe-bottom">
-
-        <div class="flex items-center gap-3">
-            <img src="icon.png" class="w-10 h-10 rounded-xl" alt="App Icon">
-            <div>
-                <h4 class="font-bold text-sm">تطبيق شركة فدك</h4>
-                <p class="text-xs text-slate-400">ثبت التطبيق للوصول السريع بدون متصفح</p>
-            </div>
-        </div>
-        <button id="installBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-black text-sm transition shadow-lg">تثبيت</button>
-        <button id="closeInstallBtn" class="text-slate-400 hover:text-white absolute top-1 left-2 p-2">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-    </div>
-
-    <div id="iosInstallModal" class="fixed inset-0 bg-slate-900/80 z-50 hidden flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
-
-        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm p-6 shadow-2xl relative animate-[slideInUp_0.3s_ease-out]">
-            <button onclick="dismissIosPrompt()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            <div class="text-center mt-2">
-                <img src="icon.png" class="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-md border border-slate-100">
-                <h3 class="text-xl font-black text-slate-800 mb-2">تثبيت التطبيق (الآيفون)</h3>
-                <p class="text-sm font-bold text-slate-500 mb-6 leading-relaxed">لتثبيت التطبيق على جهازك، اضغط على زر المشاركة <svg class="inline w-5 h-5 text-blue-500 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> بالأسفل ثم اختر <br><b class="text-slate-700">"إضافة للشاشة الرئيسية"</b> <br>(Add to Home Screen).</p>
-                <button onclick="dismissIosPrompt()" class="w-full bg-slate-100 text-slate-700 font-black py-4 rounded-xl hover:bg-slate-200 transition">حسناً، فهمت</button>
-            </div>
-        </div>
-    </div>
+  
 
 
 </body>
