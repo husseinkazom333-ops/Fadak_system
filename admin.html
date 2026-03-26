@@ -694,11 +694,11 @@
             if(currentUser.username === 'admin') { 
                 currentUser.perms = { 
                     dash:true, prod_v:true, prod_a:true, prod_e:true, prod_d:true, 
+                    raw_v:true, raw_a:true, int_ord_a:true,
                     ord_v:true, ord_pending_v:true, ord_comp_v:true, ord_miss_v:true, ord_e:true, 
                     ret_v:true, ret_a:true, pay_v:true, pay_pend_v:true, pay_hist_v:true, pay_a:true, pay_d:true, 
                     exp_v:true, exp_a:true, exp_e:true, exp_d:true, agt_v:true, agt_a:true, agt_e:true, agt_d:true, 
-                                        emp_v:true, emp_a:true, emp_e:true, emp_d:true, tech_portal:true, settings_v:true, pricing_v:true 
- 
+                    emp_v:true, emp_a:true, emp_e:true, emp_d:true, tech_portal:true, settings_v:true, pricing_v:true 
                 }; 
             }
             document.getElementById('adminLoginScreen').classList.add('hidden'); document.getElementById('adminApp').classList.remove('hidden'); document.getElementById('headerUserName').innerText = `الموظف: ${currentUser.name}`; document.getElementById('currentUserRoleDisplay').innerText = currentUser.username === 'admin' ? 'المدير العام' : 'صلاحيات مخصصة';
