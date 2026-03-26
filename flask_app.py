@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify, make_response, send_file
 from flask_cors import CORS
 import requests
 import base64
@@ -75,11 +75,20 @@ def send_telegram_text(text):
 def send_telegram_photo(caption, b64_img):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
     try:
-        if "," in b64_img: b64_img = b64_img.split(",")[1]
+        if "," in b64_img: b64_img = b64_img.split(",")
         img_bytes = base64.b64decode(b64_img)
         requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "caption": caption, "parse_mode": "HTML"}, files={"photo": ("image.jpg", img_bytes, "image/jpeg")}, timeout=10)
     except:
         send_telegram_text(caption)
+
+def send_telegram_document(file_path, caption=""):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendDocument"
+    try:
+        with open(file_path, 'rb') as f:
+            requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "caption": caption}, files={"document": f}, timeout=15)
+    except Exception as e:
+        print(f"Telegram Doc Error: {e}")
+
 
 @app.route('/api/employee_login', methods=['POST'])
 def employee_login():
@@ -202,6 +211,39 @@ def submit_payment():
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+@app.route('/api/backup_db', methods=['GET'])
+def backup_db():
+    try:
+        # 1. إرسال الملف إلى تليكرام مباشرة
+        caption = f"📦 نسخة احتياطية لقاعدة البيانات\nالتاريخ: {time.strftime('%Y-%m-%d %H:%M:%S')}"
+        send_telegram_document(DB_FILE, caption)
+        
+        # 2. إرجاع الملف ليتم تحميله في حاسبة/موبايل المدير
+        return send_file(DB_FILE, as_attachment=True, download_name=f"Fadak_DB_{int(time.time())}.db")
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/restore_db', methods=['POST'])
+def restore_db():
+    try:
+        if 'file' not in request.files:
+            return jsonify({"status": "error", "message": "لم يتم رفع أي ملف"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"status": "error", "message": "لم يتم اختيار ملف"}), 400
+
+        # حفظ الملف فوق قاعدة البيانات القديمة مباشرة
+        file.save(DB_FILE)
+        
+        # مسح الملفات المؤقتة الخاصة بـ WAL لتجنب تضارب البيانات (خطوة أمان)
+        db_wal = DB_FILE + "-wal"
+        db_shm = DB_FILE + "-shm"
+        if os.path.exists(db_wal): os.remove(db_wal)
+        if os.path.exists(db_shm): os.remove(db_shm)
+        
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

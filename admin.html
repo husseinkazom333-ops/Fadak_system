@@ -231,7 +231,7 @@
                         <label class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-xl font-black text-lg shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                             استعادة بيانات من ملف
-                            <input type="file" id="backupFileInput" accept=".json" class="hidden" onchange="importBackup(event)">
+                            <input type="file" id="backupFileInput" accept=".db,.sqlite,.sqlite3" class="hidden" onchange="importBackup(event)">
                         </label>
                     </div>
                 </div>
@@ -328,7 +328,7 @@
                     <div class="bg-white rounded-3xl shadow-sm border overflow-x-auto scroll-touch">
                         <table class="w-full text-right min-w-[700px]">
                             <thead class="bg-slate-50 text-slate-500 text-sm border-b">
-                                <tr><th class="p-4">الجهاز والمالك</th><th class="p-4">التاريخ</th><th class="p-4 text-center">السعر والتارجت</th><th class="p-4 text-center">الرئيسي</th><th class="p-4 text-center text-rose-600">المرتجع</th><th class="p-4 text-center" id="col_prod_actions">إجراء</th></tr>
+                                <tr><th class="p-4">الجهاز والمالك</th><th class="p-4">التاريخ</th><th class="p-4 text-center">السعر والتارجت</th><th class="p-4 text-center">مخزن المكتمل</th><th class="p-4 text-center text-rose-600">المرتجع</th><th class="p-4 text-center" id="col_prod_actions">إجراء</th></tr>
                             </thead>
                             <tbody id="adminProductsList" class="divide-y divide-slate-50"></tbody>
                         </table>
@@ -531,7 +531,7 @@
         </div>
     </div>
 
-    <div id="permissionsModal" class="fixed inset-0 bg-slate-900/70 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div id="permissionsModal" class="fixed inset-0 bg-slate-900/70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
                 <h3 class="text-xl font-black text-blue-700 flex items-center gap-2">لوحة التحكم الدقيقة بالصلاحيات</h3>
@@ -545,12 +545,11 @@
                             <input type="checkbox" class="perm-checkbox" onchange="toggleSubPerms(this,'admin')"> الإدارة والتسعير
                         </label>
                         <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
-                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_settings_v" class="perm-sub-checkbox admin-sub"> إعدادات نسب التسعير</label>
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_settings_v" class="perm-sub-checkbox admin-sub"> إعدادات نسب التسعير (والباك أب)</label>
                             <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pricing_v" class="perm-sub-checkbox admin-sub"> جدول التسعير الذكي</label>
                         </div>
                     </div>
 
-                    
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
                         <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
                             <input type="checkbox" id="chk_dash" class="perm-checkbox"> الإحصائيات العامة
@@ -571,6 +570,17 @@
                             <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_prod_a" class="perm-sub-checkbox prod-sub"> إضافة جهاز جديد</label>
                             <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_prod_e" class="perm-sub-checkbox prod-sub"> تعديل بيانات الأجهزة</label>
                             <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_prod_d" class="perm-sub-checkbox prod-sub"> حذف الأجهزة</label>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <label class="cursor-pointer hover:text-indigo-600 flex items-center gap-1.5"><input type="checkbox" id="chk_int_ord_a" class="perm-sub-checkbox prod-sub"> زر (أمر تصنيع للمخزن)</label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
+                        <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" id="chk_raw_v" class="perm-checkbox" onchange="toggleSubPerms(this,'raw')"> المواد الأولية
+                        </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_raw_a" class="perm-sub-checkbox raw-sub"> إضافة/تعديل/حذف مادة</label>
                         </div>
                     </div>
 
@@ -579,11 +589,11 @@
                             <input type="checkbox" id="chk_ord_v" class="perm-checkbox" onchange="toggleSubPerms(this,'ord')"> إدارة الطلبيات والتجهيز
                         </label>
                         <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
-                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_ord_pending_v" class="perm-sub-checkbox ord-sub"> رؤية (طلبات قيد الانتظار)</label>
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_ord_pending_v" class="perm-sub-checkbox ord-sub"> رؤية (قيد الانتظار)</label>
                             <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_ord_comp_v" class="perm-sub-checkbox ord-sub"> رؤية (سجل المكتملة)</label>
                             <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_ord_miss_v" class="perm-sub-checkbox ord-sub"> رؤية (سجل النواقص)</label>
                             <div class="border-t border-blue-100 my-1"></div>
-                            <label class="cursor-pointer text-blue-700 font-black flex items-center gap-1.5"><input type="checkbox" id="chk_ord_e" class="perm-sub-checkbox ord-sub"> أزرار (بدء التجهيز والاستكمال)</label>
+                            <label class="cursor-pointer text-blue-700 font-black flex items-center gap-1.5"><input type="checkbox" id="chk_ord_e" class="perm-sub-checkbox ord-sub"> أزرار (التجهيز والاستكمال)</label>
                         </div>
                     </div>
 
@@ -601,10 +611,9 @@
                             <input type="checkbox" id="chk_pay_v" class="perm-checkbox" onchange="toggleSubPerms(this,'pay')"> التسديدات المالية
                         </label>
                         <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
-                            
                             <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_hist_v" class="perm-sub-checkbox pay-sub"> رؤية (سجل التسديدات)</label>
                             <div class="border-t border-slate-100 my-1"></div>
-                            <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_a" class="perm-sub-checkbox pay-sub"> زر (تأكيد وتحديث الصندوق)</label>
+                            <label class="cursor-pointer hover:text-emerald-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_a" class="perm-sub-checkbox pay-sub"> إضافة تسديد وتأكيد الصندوق</label>
                             <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_pay_d" class="perm-sub-checkbox pay-sub"> زر (إلغاء ورفض الوصل)</label>
                         </div>
                     </div>
@@ -700,7 +709,7 @@
             const p = currentUser.perms || {};
             document.getElementById('nav-dashboard').style.display = p.dash ? 'flex' : 'none'; 
             document.getElementById('nav-addProduct').style.display = p.prod_a ? 'flex' : 'none'; 
-            document.getElementById('nav-rawMaterials').style.display = p.prod_a ? 'flex' : 'none'; 
+            document.getElementById('nav-rawMaterials').style.display = p.raw_v ? 'flex' : 'none'; // التعديل هنا للمواد
             document.getElementById('nav-inventory').style.display = p.prod_v ? 'flex' : 'none'; 
             document.getElementById('nav-orders').style.display = p.ord_v ? 'flex' : 'none'; 
             document.getElementById('nav-returns').style.display = p.ret_v ? 'flex' : 'none'; 
@@ -710,7 +719,6 @@
             document.getElementById('nav-employees').style.display = p.emp_v ? 'flex' : 'none';
             document.getElementById('nav-myTasks').style.display = p.tech_portal ? 'flex' : 'none';
             
-            // السطرين الجدد الخاصة بالتسعير
             if(document.getElementById('nav-settings')) document.getElementById('nav-settings').style.display = p.settings_v ? 'flex' : 'none';
             if(document.getElementById('nav-pricing')) document.getElementById('nav-pricing').style.display = p.pricing_v ? 'flex' : 'none';
             
@@ -718,6 +726,9 @@
             document.getElementById('col_exp_actions').style.display = (p.exp_e || p.exp_d) ? 'table-cell' : 'none'; 
             document.getElementById('col_agt_actions').style.display = (p.agt_e || p.agt_d) ? 'table-cell' : 'none'; 
             document.getElementById('col_emp_actions').style.display = (p.emp_e || p.emp_d) ? 'table-cell' : 'none';
+            
+            // إخفاء أزرار المواد الأولية حسب الصلاحية
+            if(document.getElementById('addRawForm')) document.getElementById('addRawForm').style.display = p.raw_a ? 'flex' : 'none';
             
             document.getElementById('tabPendingOrders').style.display = p.ord_pending_v ? 'block' : 'none';
             document.getElementById('tabCompletedOrders').style.display = p.ord_comp_v ? 'block' : 'none';
@@ -727,7 +738,7 @@
             document.getElementById('tabHistoryPay').style.display = p.pay_hist_v ? 'block' : 'none';
 
             let firstTab = p.dash ? 'dashboard' : (p.prod_v ? 'inventory' : (p.ord_v ? 'orders' : (p.tech_portal ? 'myTasks' : (p.agt_v ? 'agents' : 'dashboard'))));
-            if(document.getElementById('btnInternalOrder')) document.getElementById('btnInternalOrder').style.display = p.prod_a ? 'flex' : 'none'; 
+            if(document.getElementById('btnInternalOrder')) document.getElementById('btnInternalOrder').style.display = p.int_ord_a ? 'flex' : 'none'; // التعديل هنا لزر التصنيع
             switchTab(firstTab);
         }
 
@@ -1162,6 +1173,7 @@
                 perms: { 
                     dash: document.getElementById('chk_dash').checked, 
                     prod_v: document.getElementById('chk_prod_v').checked, prod_a: document.getElementById('chk_prod_a').checked, prod_e: document.getElementById('chk_prod_e').checked, prod_d: document.getElementById('chk_prod_d').checked, 
+                    raw_v: document.getElementById('chk_raw_v') ? document.getElementById('chk_raw_v').checked : false, raw_a: document.getElementById('chk_raw_a') ? document.getElementById('chk_raw_a').checked : false, int_ord_a: document.getElementById('chk_int_ord_a') ? document.getElementById('chk_int_ord_a').checked : false,
                     ord_v: document.getElementById('chk_ord_v').checked, ord_pending_v: document.getElementById('chk_ord_pending_v').checked, ord_comp_v: document.getElementById('chk_ord_comp_v').checked, ord_miss_v: document.getElementById('chk_ord_miss_v').checked, ord_e: document.getElementById('chk_ord_e').checked, 
                     ret_v: document.getElementById('chk_ret_v').checked, ret_a: document.getElementById('chk_ret_a').checked, 
                     pay_v: document.getElementById('chk_pay_v').checked, pay_a: document.getElementById('chk_pay_a').checked, pay_d: document.getElementById('chk_pay_d').checked, pay_hist_v: document.getElementById('chk_pay_hist_v').checked,
@@ -1169,8 +1181,8 @@
                     agt_v: document.getElementById('chk_agt_v').checked, agt_a: document.getElementById('chk_agt_a').checked, agt_e: document.getElementById('chk_agt_e').checked, agt_d: document.getElementById('chk_agt_d').checked, 
                     emp_v: document.getElementById('chk_emp_v').checked, emp_a: document.getElementById('chk_emp_a').checked, emp_e: document.getElementById('chk_emp_e').checked, emp_d: document.getElementById('chk_emp_d').checked,
                     tech_portal: document.getElementById('chk_tech_portal').checked,
-                    settings_v: document.getElementById('chk_settings_v').checked,
-                    pricing_v: document.getElementById('chk_pricing_v').checked
+                    settings_v: document.getElementById('chk_settings_v') ? document.getElementById('chk_settings_v').checked : false,
+                    pricing_v: document.getElementById('chk_pricing_v') ? document.getElementById('chk_pricing_v').checked : false
                 } 
             }; 
             if(editEmpId) { 
@@ -1188,6 +1200,9 @@
             let p = e.perms || {};
             document.getElementById('chk_dash').checked = !!p.dash; 
             document.getElementById('chk_prod_v').checked = !!p.prod_v; document.getElementById('chk_prod_a').checked = !!p.prod_a; document.getElementById('chk_prod_e').checked = !!p.prod_e; document.getElementById('chk_prod_d').checked = !!p.prod_d; 
+            if(document.getElementById('chk_raw_v')) document.getElementById('chk_raw_v').checked = !!p.raw_v;
+            if(document.getElementById('chk_raw_a')) document.getElementById('chk_raw_a').checked = !!p.raw_a;
+            if(document.getElementById('chk_int_ord_a')) document.getElementById('chk_int_ord_a').checked = !!p.int_ord_a;
             document.getElementById('chk_ord_v').checked = !!p.ord_v; document.getElementById('chk_ord_pending_v').checked = !!p.ord_pending_v; document.getElementById('chk_ord_comp_v').checked = !!p.ord_comp_v; document.getElementById('chk_ord_miss_v').checked = !!p.ord_miss_v; document.getElementById('chk_ord_e').checked = !!p.ord_e; 
             document.getElementById('chk_ret_v').checked = !!p.ret_v; document.getElementById('chk_ret_a').checked = !!p.ret_a; 
             document.getElementById('chk_pay_v').checked = !!p.pay_v; document.getElementById('chk_pay_a').checked = !!p.pay_a; document.getElementById('chk_pay_d').checked = !!p.pay_d; document.getElementById('chk_pay_hist_v').checked = !!p.pay_hist_v;
@@ -1195,8 +1210,8 @@
             document.getElementById('chk_agt_v').checked = !!p.agt_v; document.getElementById('chk_agt_a').checked = !!p.agt_a; document.getElementById('chk_agt_e').checked = !!p.agt_e; document.getElementById('chk_agt_d').checked = !!p.agt_d; 
             document.getElementById('chk_emp_v').checked = !!p.emp_v; document.getElementById('chk_emp_a').checked = !!p.emp_a; document.getElementById('chk_emp_e').checked = !!p.emp_e; document.getElementById('chk_emp_d').checked = !!p.emp_d;
             document.getElementById('chk_tech_portal').checked = !!p.tech_portal;
-            document.getElementById('chk_settings_v').checked = !!p.settings_v;
-            document.getElementById('chk_pricing_v').checked = !!p.pricing_v;
+            if(document.getElementById('chk_settings_v')) document.getElementById('chk_settings_v').checked = !!p.settings_v;
+            if(document.getElementById('chk_pricing_v')) document.getElementById('chk_pricing_v').checked = !!p.pricing_v;
 
             document.getElementById('empFormTitle').innerHTML=`تعديل بيانات الموظف`; document.getElementById('btnCancelEmp').classList.remove('hidden'); window.scrollTo(0,0); openPermModal(); 
         }
@@ -1258,7 +1273,7 @@
             if(ptBody) ptBody.innerHTML = pricingHtml || '<tr><td colspan="10" class="p-8 text-slate-400 font-bold text-center">لا توجد أجهزة مضافة حتى الآن.</td></tr>';
             
             let navPricing = document.getElementById('nav-pricing');
-            if(navPricing) navPricing.style.display = (currentUser && currentUser.username === 'admin') ? 'flex' : 'none';
+            if(navPricing) navPricing.style.display = (currentUser && currentUser.perms && currentUser.perms.pricing_v) ? 'flex' : 'none';
 
             
 document.getElementById('adminProductsList').innerHTML = products.map(pr => `
@@ -1543,7 +1558,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
         }
 
         async function markAsTested(orderId, itemId, earnAmount) {
-            if(confirm("هل تم فحص الأجهزة بالكامل وهي جاهزة للوكيل؟")) {
+            if(confirm("هل تم فحص الأجهزة بالكامل وهي جاهزة؟")) {
                 let order = orders.find(o => String(o.id) === String(orderId));
                 let item = order.items.find(i => String(i.id) === String(itemId));
                 let emp = employees.find(e => e.id === currentUser.id);
@@ -1551,19 +1566,25 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                 emp.balance = (emp.balance || 0) + earnAmount;
                 currentUser.balance = emp.balance;
                 
-                // --- الذكاء: إذا كان الأمر تصنيع داخلي ---
+                // --- التعديل الجذري هنا لأوامر المخزن الداخلي ---
                 if (order.agentId === 'internal_store') {
                     let product = products.find(p => String(p.id) === String(item.id));
+                    let reqQty = item.requested_qty || item.qty;
                     if (product) {
-                        product.ready_qty = (product.ready_qty || 0) + item.qty;
-                        order.status = 'delivered'; // إخفاء الأمر واعتباره مكتمل
+                        // 1. إضافة الأجهزة المصنعة إلى (مخزن المكتمل)
+                        product.qty = (product.qty || 0) + reqQty; 
                     }
+                    // 2. تسجيلها كمكتملة 100% حتى لا تروح لقائمة النواقص
+                    item.delivered_qty = reqQty; 
+                    // 3. إنهاء الطلب وتوثيق التاريخ
+                    order.status = 'delivered'; 
+                    order.delivery_date = getNow(); 
                 }
                 // ----------------------------------------
 
                 updateUI();
                 await saveDataBulk([{key: 'orders', data: orders}, {key: 'employees', data: employees}, {key: 'products', data: products}]);
-                showToast(`تم الفحص! أُضيف ${earnAmount.toLocaleString()} لرصيدك.`);
+                showToast(`تم الفحص بنجاح! أُضيف ${earnAmount.toLocaleString()} لرصيدك.`);
             }
         }
 
@@ -1877,7 +1898,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                 document.getElementById('setProfit').value = systemSettings.profit;
             }
             let navSettings = document.getElementById('nav-settings');
-            if(navSettings) navSettings.style.display = (currentUser && currentUser.username === 'admin') ? 'flex' : 'none';
+            if(navSettings) navSettings.style.display = (currentUser && currentUser.perms && currentUser.perms.settings_v) ? 'flex' : 'none';
         };
 
 // ==========================================
@@ -1946,56 +1967,60 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             showToast('تم إرسال أمر التصنيع إلى ورشة العمل بنجاح! 🚀');
         }
         // ==========================================
-        // نظام النسخ الاحتياطي واستعادة البيانات
+        // نظام النسخ الاحتياطي الذكي (مباشر لسيرفر الـ DB والتليكرام)
         // ==========================================
-        function exportBackup() {
-            let backupData = { products, agents, orders, returns, payments, expenses, employees, rawMaterials, stats, systemSettings };
-            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
-            let downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "Fadak_Backup_" + getNow().replace(/[: \-]/g, "_") + ".json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            showToast("تم تحميل النسخة الاحتياطية بنجاح! 💾");
+        async function exportBackup() {
+            toggleLoader(true);
+            try {
+                let res = await fetch(`${API_URL}/backup_db?_t=${new Date().getTime()}`);
+                if (!res.ok) throw new Error("فشل تحميل النسخة");
+                
+                // تحويل الاستجابة إلى ملف للتحميل
+                let blob = await res.blob();
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement('a');
+                a.href = url;
+                a.download = `Fadak_Database_${getNow().replace(/[: \-]/g, "_")}.db`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                
+                showToast("تم التحميل! وتم إرسال نسخة للتليكرام بنجاح 🚀");
+            } catch(e) {
+                showToast("حدث خطأ أثناء تحميل النسخة!", "error");
+            }
+            toggleLoader(false);
         }
 
-        function importBackup(event) {
-            let file = event.target.files[0]; // التعديل هنا ضفنا
+        async function importBackup(event) {
+            let file = event.target.files[0];
             if (!file) return;
-            if(!confirm("تحذير ⚠️: استعادة البيانات ستقوم بمسح كل البيانات الحالية واستبدالها ببيانات الملف. هل أنت متأكد؟")) {
+            if(!confirm("تحذير ⚠️: استعادة البيانات ستقوم بمسح كل البيانات الحالية واستبدالها بالملف المرفوع. هل أنت متأكد؟")) {
                 event.target.value = ""; return;
             }
             
-            let reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    let importedData = JSON.parse(e.target.result);
-                    if(importedData.products && importedData.agents) {
-                        toggleLoader(true);
-                        await saveDataBulk([
-                            {key: 'products', data: importedData.products},
-                            {key: 'agents', data: importedData.agents},
-                            {key: 'orders', data: importedData.orders || []},
-                            {key: 'returns', data: importedData.returns || []},
-                            {key: 'payments', data: importedData.payments || []},
-                            {key: 'expenses', data: importedData.expenses || []},
-                            {key: 'employees', data: importedData.employees || []},
-                            {key: 'rawMaterials', data: importedData.rawMaterials || []},
-                            {key: 'stats', data: importedData.stats || {sales:0,cash:0}},
-                            {key: 'systemSettings', data: importedData.systemSettings || {marketing:5,transport:2,profit:25}}
-                        ]);
-                        showToast("تمت استعادة البيانات بنجاح! يتم الآن تحديث النظام...");
-                        setTimeout(() => location.reload(), 2000);
-                    } else {
-                        showToast("ملف النسخة الاحتياطية غير صالح!", "error");
-                    }
-                } catch(err) {
-                    showToast("حدث خطأ أثناء قراءة الملف!", "error");
+            toggleLoader(true);
+            let formData = new FormData();
+            formData.append("file", file);
+            
+            try {
+                let res = await fetch(`${API_URL}/restore_db?_t=${new Date().getTime()}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                let data = await res.json();
+                
+                if(res.ok && data.status === 'success') {
+                    showToast("تمت استعادة البيانات بنجاح! يتم الآن تحديث النظام...");
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showToast(data.message || "ملف النسخة الاحتياطية غير صالح!", "error");
                 }
-                event.target.value = "";
-            };
-            reader.readAsText(file);
+            } catch(err) {
+                showToast("حدث خطأ أثناء رفع الملف للسيرفر!", "error");
+            }
+            event.target.value = "";
         }
 
     </script>
