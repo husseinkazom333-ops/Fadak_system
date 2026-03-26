@@ -278,7 +278,8 @@
                         <div id="recipeSection" class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mt-4 transition-all">
                             <h4 class="font-bold text-indigo-700 mb-3 text-sm flex items-center gap-2">المواد الأولية لصنع هذا الجهاز (خصم تلقائي)</h4>
                             <div class="flex gap-2 mb-2">
-                                <select id="recipeRaw" class="w-1/2 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none text-slate-700"></select>
+                                <input type="text" id="recipeRawSearch" list="rawListDatalist" placeholder="ابحث عن المادة الأولية..." class="w-1/2 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none text-slate-700">
+<datalist id="rawListDatalist"></datalist>
                                 <input type="number" id="recipeQty" inputmode="numeric" pattern="[0-9]*" placeholder="الكمية للقطعة الواحدة" class="w-1/2 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none">
                                 <button type="button" onclick="addRecipeItem()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 rounded-xl font-black transition shadow-sm">+</button>
                             </div>
@@ -542,7 +543,7 @@
 
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
                         <label class="font-black text-slate-800 flex items-center gap-2 mb-3 border-b border-slate-100 pb-2 cursor-pointer hover:text-blue-600">
-                            <input type="checkbox" class="perm-checkbox" onchange="toggleSubPerms(this,'admin')"> الإدارة والتسعير
+                            <input type="checkbox" id="chk_admin_v" class="perm-checkbox" onchange="toggleSubPerms(this,'admin')"> الإدارة والتسعير
                         </label>
                         <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
                             <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5"><input type="checkbox" id="chk_settings_v" class="perm-sub-checkbox admin-sub"> إعدادات نسب التسعير (والباك أب)</label>
@@ -558,8 +559,12 @@
 
                     <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 shadow-sm hover:border-indigo-400 transition">
                         <label class="font-black text-indigo-800 flex items-center gap-2 mb-3 border-b border-indigo-100 pb-2 cursor-pointer">
-                            <input type="checkbox" id="chk_tech_portal" class="perm-checkbox"> بوابة الصانع (فني التصنيع)
+                            بوابة الصانع (فني التصنيع)
                         </label>
+                        <div class="flex flex-col gap-2 pl-6 text-sm font-bold text-slate-600">
+                            <label class="cursor-pointer hover:text-indigo-600 flex items-center gap-1.5"><input type="checkbox" id="chk_tech_mfg" class="perm-checkbox"> صلاحية التجميع والتصنيع</label>
+                            <label class="cursor-pointer hover:text-emerald-600 flex items-center gap-1.5"><input type="checkbox" id="chk_tech_test" class="perm-checkbox"> صلاحية الفحص النهائي</label>
+                        </div>
                     </div>
 
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition">
@@ -698,7 +703,7 @@
                     ord_v:true, ord_pending_v:true, ord_comp_v:true, ord_miss_v:true, ord_e:true, 
                     ret_v:true, ret_a:true, pay_v:true, pay_pend_v:true, pay_hist_v:true, pay_a:true, pay_d:true, 
                     exp_v:true, exp_a:true, exp_e:true, exp_d:true, agt_v:true, agt_a:true, agt_e:true, agt_d:true, 
-                    emp_v:true, emp_a:true, emp_e:true, emp_d:true, tech_portal:true, settings_v:true, pricing_v:true 
+                    emp_v:true, emp_a:true, emp_e:true, emp_d:true, tech_mfg:true, tech_test:true, settings_v:true, pricing_v:true 
                 }; 
             }
             document.getElementById('adminLoginScreen').classList.add('hidden'); document.getElementById('adminApp').classList.remove('hidden'); document.getElementById('headerUserName').innerText = `الموظف: ${currentUser.name}`; document.getElementById('currentUserRoleDisplay').innerText = currentUser.username === 'admin' ? 'المدير العام' : 'صلاحيات مخصصة';
@@ -717,7 +722,7 @@
             document.getElementById('nav-expenses').style.display = p.exp_v ? 'flex' : 'none'; 
             document.getElementById('nav-agents').style.display = p.agt_v ? 'flex' : 'none'; 
             document.getElementById('nav-employees').style.display = p.emp_v ? 'flex' : 'none';
-            document.getElementById('nav-myTasks').style.display = p.tech_portal ? 'flex' : 'none';
+            document.getElementById('nav-myTasks').style.display = (p.tech_mfg || p.tech_test) ? 'flex' : 'none';
             
             if(document.getElementById('nav-settings')) document.getElementById('nav-settings').style.display = p.settings_v ? 'flex' : 'none';
             if(document.getElementById('nav-pricing')) document.getElementById('nav-pricing').style.display = p.pricing_v ? 'flex' : 'none';
@@ -737,7 +742,7 @@
             document.getElementById('tabPendingPay').style.display = 'none';
             document.getElementById('tabHistoryPay').style.display = p.pay_hist_v ? 'block' : 'none';
 
-            let firstTab = p.dash ? 'dashboard' : (p.prod_v ? 'inventory' : (p.ord_v ? 'orders' : (p.tech_portal ? 'myTasks' : (p.agt_v ? 'agents' : 'dashboard'))));
+            let firstTab = p.dash ? 'dashboard' : (p.prod_v ? 'inventory' : (p.ord_v ? 'orders' : ((p.tech_mfg || p.tech_test) ? 'myTasks' : (p.agt_v ? 'agents' : 'dashboard'))));
             if(document.getElementById('btnInternalOrder')) document.getElementById('btnInternalOrder').style.display = p.int_ord_a ? 'flex' : 'none'; // التعديل هنا لزر التصنيع
             switchTab(firstTab);
         }
@@ -883,24 +888,29 @@
 
         // دوال الربط الذكي والوصفة
         function updateRecipeUI() {
-            let rawSelect = document.getElementById('recipeRaw');
-            if(!rawSelect) return;
-            rawSelect.innerHTML = '<option value="" disabled selected>اختر مادة أولية...</option>';
+            let dl = document.getElementById('rawListDatalist');
+            if(!dl) return;
+            dl.innerHTML = '';
             rawMaterials.forEach(r => {
-                rawSelect.innerHTML += `<option value="${r.id}">${r.name} (بالمخزن: ${r.qty})</option>`;
+                dl.innerHTML += `<option value="${r.name}" data-id="${r.id}"></option>`;
             });
             renderRecipe();
         }
 
         function addRecipeItem() {
-            let rId = document.getElementById('recipeRaw').value;
+            let rName = document.getElementById('recipeRawSearch').value;
+            let raw = rawMaterials.find(x => x.name === rName);
+            if(!raw) return showToast("المادة غير موجودة، يرجى كتابة الاسم بشكل صحيح", "error");
+            
+            let rId = raw.id;
             let rQty = parseInt(document.getElementById('recipeQty').value);
-            if(!rId || !rQty || rQty <= 0) return showToast("اختر مادة واكتب كمية صحيحة", "error");
+            if(!rQty || rQty <= 0) return showToast("اكتب كمية صحيحة", "error");
             
             let existing = tempRecipe.find(x => String(x.rawId) === String(rId));
             if(existing) existing.qty += rQty;
             else tempRecipe.push({rawId: rId, qty: rQty});
             
+            document.getElementById('recipeRawSearch').value = '';
             document.getElementById('recipeQty').value = '';
             renderRecipe();
         }
@@ -1180,11 +1190,13 @@
                     exp_v: document.getElementById('chk_exp_v').checked, exp_a: document.getElementById('chk_exp_a').checked, exp_e: document.getElementById('chk_exp_e').checked, exp_d: document.getElementById('chk_exp_d').checked, 
                     agt_v: document.getElementById('chk_agt_v').checked, agt_a: document.getElementById('chk_agt_a').checked, agt_e: document.getElementById('chk_agt_e').checked, agt_d: document.getElementById('chk_agt_d').checked, 
                     emp_v: document.getElementById('chk_emp_v').checked, emp_a: document.getElementById('chk_emp_a').checked, emp_e: document.getElementById('chk_emp_e').checked, emp_d: document.getElementById('chk_emp_d').checked,
-                    tech_portal: document.getElementById('chk_tech_portal').checked,
+                    tech_mfg: document.getElementById('chk_tech_mfg').checked,
+                    tech_test: document.getElementById('chk_tech_test').checked,
                     settings_v: document.getElementById('chk_settings_v') ? document.getElementById('chk_settings_v').checked : false,
-                    pricing_v: document.getElementById('chk_pricing_v') ? document.getElementById('chk_pricing_v').checked : false
+                    pricing_v: document.getElementById('chk_pricing_v') ? document.getElementById('chk_pricing_v').checked : false,
+                    admin_v: document.getElementById('chk_admin_v') ? document.getElementById('chk_admin_v').checked : false
                 } 
-            }; 
+            };
             if(editEmpId) { 
                 let exIndex = employees.findIndex(x=>x.id===editEmpId); employees[exIndex] = emp; cancelEmpEdit(); 
             } else { 
@@ -1209,9 +1221,11 @@
             document.getElementById('chk_exp_v').checked = !!p.exp_v; document.getElementById('chk_exp_a').checked = !!p.exp_a; document.getElementById('chk_exp_e').checked = !!p.exp_e; document.getElementById('chk_exp_d').checked = !!p.exp_d; 
             document.getElementById('chk_agt_v').checked = !!p.agt_v; document.getElementById('chk_agt_a').checked = !!p.agt_a; document.getElementById('chk_agt_e').checked = !!p.agt_e; document.getElementById('chk_agt_d').checked = !!p.agt_d; 
             document.getElementById('chk_emp_v').checked = !!p.emp_v; document.getElementById('chk_emp_a').checked = !!p.emp_a; document.getElementById('chk_emp_e').checked = !!p.emp_e; document.getElementById('chk_emp_d').checked = !!p.emp_d;
-            document.getElementById('chk_tech_portal').checked = !!p.tech_portal;
+            document.getElementById('chk_tech_mfg').checked = !!p.tech_mfg;
+            document.getElementById('chk_tech_test').checked = !!p.tech_test;
             if(document.getElementById('chk_settings_v')) document.getElementById('chk_settings_v').checked = !!p.settings_v;
             if(document.getElementById('chk_pricing_v')) document.getElementById('chk_pricing_v').checked = !!p.pricing_v;
+            if(document.getElementById('chk_admin_v')) document.getElementById('chk_admin_v').checked = !!p.admin_v;
 
             document.getElementById('empFormTitle').innerHTML=`تعديل بيانات الموظف`; document.getElementById('btnCancelEmp').classList.remove('hidden'); window.scrollTo(0,0); openPermModal(); 
         }
@@ -1227,7 +1241,7 @@
             updateCustomPricesUI(); 
             updateRecipeUI(); 
             
-            if (p.tech_portal) loadMyTasks();
+            if (p.tech_mfg || p.tech_test) loadMyTasks();
 
             let totalExp = expenses.reduce((s, e) => s + e.amount, 0);
             document.getElementById('statSales').innerText = (stats.sales || 0).toLocaleString() + ' د.ع'; 
@@ -1300,33 +1314,50 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                     </td>
                 </tr>`).join('');
 
-            let activeO = orders.filter(o => o.status !== 'delivered');
-            let completedO = orders.filter(o => o.status === 'delivered');
+            let activeO = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
+            let completedO = orders.filter(o => o.status === 'delivered' || o.status === 'cancelled');
             document.getElementById('ordersBadge').innerText = activeO.length; document.getElementById('ordersBadge').style.display = activeO.length ? 'block' : 'none';
             
             document.getElementById('pendingOrdersTbody').innerHTML = activeO.length ? [...activeO].reverse().map((o) => {
+                let allReadyForFulfillment = true; 
                 let itemsList = o.items.map(item => {
-                    let mfgStatusText = '';
-                    let assignBtn = '';
-                    let mfgStatusColor = 'bg-slate-50';
+                    let mfgStatusText = ''; let assignBtn = ''; let mfgStatusColor = 'bg-slate-50';
+                    let reqQty = item.requested_qty || item.qty;
                     
-                    if (!item.mfg_status || item.mfg_status === 'pending') {
-                        assignBtn = `<button onclick="openAssignModal(${o.id}, ${item.id}, '${item.name}', ${item.requested_qty || item.qty})" class="mt-2 text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-black px-3 py-1.5 rounded-lg transition border border-indigo-200 w-full text-center">إحالة لصانع ⚙️</button>`;
-                    } else if (item.mfg_status === 'assigned') {
-                        let techName = employees.find(e => String(e.id) === String(item.tech_id))?.name || 'صانع مجهول';
-                        mfgStatusColor = 'bg-amber-50 border-amber-200';
-                        mfgStatusText = `<div class="text-[10px] font-black text-amber-600 mt-1">بانتظار تسليم المواد لـ: ${techName}</div>`;
-                        assignBtn = `<button onclick="deliverMaterials(${o.id}, ${item.id})" class="mt-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-black px-3 py-1.5 rounded-lg transition shadow-sm w-full text-center">تسليم المواد 📦</button>`;
-                    } else if (item.mfg_status === 'in_progress') {
-                        let techName = employees.find(e => String(e.id) === String(item.tech_id))?.name || 'صانع';
-                        mfgStatusColor = 'bg-blue-50 border-blue-200';
-                        mfgStatusText = `<div class="text-[10px] font-black text-blue-600 mt-1">قيد التصنيع لدى: ${techName}</div>`;
-                    } else if (item.mfg_status === 'manufactured') {
-                        mfgStatusColor = 'bg-emerald-50 border-emerald-200';
-                        mfgStatusText = `<div class="text-[10px] font-black text-emerald-600 mt-1">تم التصنيع - بانتظار الفحص</div>`;
-                    } else if (item.mfg_status === 'tested') {
+                    let mainProduct = products.find(p => p.id === item.id);
+                    let stockAvail = mainProduct ? (mainProduct.qty || 0) : 0;
+
+                    if (item.mfg_status === 'tested') {
                          mfgStatusColor = 'bg-emerald-100 border-emerald-300';
                          mfgStatusText = `<div class="text-[10px] font-black text-emerald-700 mt-1">✅ جاهز 100% (تم الفحص)</div>`;
+                    } else {
+                         if (o.agentId !== 'internal_store' && stockAvail >= reqQty && (!item.mfg_status || item.mfg_status === 'pending')) {
+                             mfgStatusColor = 'bg-emerald-50 border-emerald-200';
+                             mfgStatusText = `<div class="text-[10px] font-black text-emerald-600 mt-1">✓ الرصيد متوفر بالمخزن (لا يحتاج تصنيع)</div>`;
+                         } else {
+                             allReadyForFulfillment = false; 
+                             if (!item.mfg_status || item.mfg_status === 'pending') {
+                                 assignBtn = `<button onclick="openAssignModal(${o.id}, ${item.id}, '${item.name}', ${reqQty})" class="mt-2 text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-black px-3 py-1.5 rounded-lg transition border border-indigo-200 w-full text-center">إحالة النقص للصانع ⚙️</button>`;
+                             } else if (item.mfg_status === 'assigned') {
+                                 let techName = employees.find(e => String(e.id) === String(item.tech_id))?.name || 'صانع مجهول';
+                                 mfgStatusColor = 'bg-amber-50 border-amber-200';
+                                 mfgStatusText = `<div class="text-[10px] font-black text-amber-600 mt-1">بانتظار تسليم المواد لـ: ${techName}</div>`;
+                                 assignBtn = `<button onclick="deliverMaterials(${o.id}, ${item.id})" class="mt-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-black px-3 py-1.5 rounded-lg transition shadow-sm w-full text-center">تسليم المواد 📦</button>`;
+                             } else if (item.mfg_status === 'in_progress') {
+                                 let techName = employees.find(e => String(e.id) === String(item.tech_id))?.name || 'صانع';
+                                 mfgStatusColor = 'bg-blue-50 border-blue-200';
+                                 mfgStatusText = `<div class="text-[10px] font-black text-blue-600 mt-1">قيد التصنيع لدى: ${techName}</div>`;
+                             } else if (item.mfg_status === 'manufactured') {
+                                 mfgStatusColor = 'bg-emerald-50 border-emerald-200';
+                                 mfgStatusText = `<div class="text-[10px] font-black text-emerald-600 mt-1">تم التصنيع - بانتظار إحالة الفحص</div>`;
+                                 let testTechs = employees.filter(e => e.perms && e.perms.tech_test).map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                                 assignBtn = `<div class="mt-2 flex gap-1"><select id="tester_sel_${o.id}_${item.id}" class="text-xs border border-emerald-300 p-1.5 rounded-lg w-full font-bold text-emerald-700 outline-none"><option value="" disabled selected>اختر الفاحص...</option>${testTechs}</select><button onclick="confirmTesterAssign(${o.id}, ${item.id})" class="text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-black px-3 py-1.5 rounded-lg transition shadow-sm">إحالة</button></div>`;
+                             } else if (item.mfg_status === 'testing_assigned') {
+                                 let testerName = employees.find(e => String(e.id) === String(item.tester_id))?.name || 'فاحص';
+                                 mfgStatusColor = 'bg-indigo-50 border-indigo-200';
+                                 mfgStatusText = `<div class="text-[10px] font-black text-indigo-600 mt-1">قيد الفحص لدى: ${testerName}</div>`;
+                             }
+                         }
                     }
 
                     return `
@@ -1335,32 +1366,50 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                             <img src="${item.img}" class="w-10 h-10 rounded-md object-cover border border-slate-200 bg-white p-0.5">
                             <div class="flex flex-col text-right w-full">
                                 <span class="text-sm font-black text-slate-800">${item.name}</span>
-                                <span class="text-xs font-black text-rose-500 mt-1 bg-rose-50 border border-rose-100 w-fit px-2 py-0.5 rounded">العدد المطلوب: ${item.requested_qty || item.qty}</span>
+                                <span class="text-xs font-black text-rose-500 mt-1 bg-rose-50 border border-rose-100 w-fit px-2 py-0.5 rounded">العدد المطلوب: ${reqQty}</span>
                                 ${mfgStatusText}
                             </div>
                         </div>
                         ${assignBtn}
                     </div>`;
                 }).join('');
-                return `<tr class="hover:bg-blue-50/20 transition"><td class="p-3 md:p-4 align-top"><div class="font-black text-slate-800 text-base md:text-lg">طلب #${o.id}</div><div class="text-sm font-bold text-slate-500 mt-1">${o.agentName}</div></td><td class="p-3 md:p-4 align-top text-xs md:text-sm font-black text-slate-500">${o.date || '-'}</td><td class="p-3 md:p-4 align-top">${itemsList}</td><td class="p-3 md:p-4 align-top text-center font-black text-blue-700 text-lg md:text-xl">${o.total.toLocaleString()} د.ع</td><td class="p-3 md:p-4 align-top text-center">${p.ord_e ? `<button onclick="openFulfillmentModal(${o.id}, false)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-5 py-2.5 rounded-xl font-black text-sm transition shadow-md w-full whitespace-nowrap flex items-center justify-center gap-1.5">بدء التجهيز</button>` : '-'}</td></tr>`;
+                
+                let fulfillBtn = allReadyForFulfillment 
+                    ? `<button onclick="openFulfillmentModal(${o.id}, false)" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-3 rounded-2xl font-black text-sm transition-all shadow-[0_8px_15px_-3px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_20px_-3px_rgba(37,99,235,0.5)] w-full whitespace-nowrap flex items-center justify-center gap-2 active:scale-95">بدء التجهيز 📦</button>`
+                    : `<button disabled class="bg-slate-200 text-slate-400 px-5 py-3 rounded-2xl font-black text-sm w-full whitespace-nowrap flex items-center justify-center gap-2 cursor-not-allowed border-2 border-slate-300 border-dashed" title="يجب توفر الأجهزة في المخزن أولاً">التجهيز مقفل 🔒</button>`;
+
+                return `<tr class="hover:bg-blue-50/20 transition"><td class="p-3 md:p-4 align-top"><div class="font-black text-slate-800 text-base md:text-lg">طلب #${o.id}</div><div class="text-sm font-bold text-slate-500 mt-1">${o.agentName}</div></td><td class="p-3 md:p-4 align-top text-xs md:text-sm font-black text-slate-500">${o.date || '-'}</td><td class="p-3 md:p-4 align-top">${itemsList}</td><td class="p-3 md:p-4 align-top text-center font-black text-blue-700 text-lg md:text-xl">${o.total.toLocaleString()} د.ع</td><td class="p-3 md:p-4 align-top text-center flex flex-col gap-2.5">${p.ord_e ? `${fulfillBtn}<button onclick="cancelOrder(${o.id})" class="bg-gradient-to-r from-rose-50 to-red-50 hover:from-rose-100 hover:to-red-100 text-rose-600 border-2 border-rose-200 hover:border-rose-300 px-5 py-3 rounded-2xl font-black text-sm transition-all shadow-sm hover:shadow w-full flex items-center justify-center gap-2 active:scale-95">إلغاء الطلبية ❌</button>` : '-'}</td></tr>`;
             }).join('') : '<tr><td colspan="5" class="text-center font-bold text-slate-400 p-8 text-sm">لا توجد طلبات جديدة.</td></tr>';
 
             document.getElementById('completedOrdersTbody').innerHTML = completedO.length ? [...completedO].reverse().map(o => {
+                let isCancelled = o.status === 'cancelled';
                 let itemsList = o.items.map(item => `
-                    <div class="flex items-center gap-3 bg-slate-50/50 p-2 rounded-lg mb-2 border border-slate-100 ${item.delivered_qty > 0 ? 'border-r-4 border-r-emerald-400' : 'border-r-4 border-r-slate-300'}">
+                    <div class="flex items-center gap-3 bg-slate-50/50 p-2 rounded-lg mb-2 border border-slate-100 ${isCancelled ? 'opacity-50 border-r-4 border-r-rose-400' : (item.delivered_qty > 0 ? 'border-r-4 border-r-emerald-400' : 'border-r-4 border-r-slate-300')}">
                         <img src="${item.img}" class="w-10 h-10 rounded-md object-cover border border-slate-200 bg-white p-0.5">
                         <div class="flex flex-col text-right">
-                            <span class="text-sm font-black text-slate-800">${item.name}</span>
-                            <span class="text-xs font-black text-emerald-600 mt-1 bg-emerald-50 border border-emerald-100 w-fit px-2 py-0.5 rounded">تم تجهيز: ${item.delivered_qty || 0}</span>
+                            <span class="text-sm font-black text-slate-800 ${isCancelled ? 'line-through' : ''}">${item.name}</span>
+                            <span class="text-xs font-black ${isCancelled ? 'text-rose-600 bg-rose-50 border-rose-100' : 'text-emerald-600 bg-emerald-50 border-emerald-100'} mt-1 px-2 py-0.5 rounded border w-fit">${isCancelled ? 'ملغاة ❌' : `تم تجهيز: ${item.delivered_qty || 0}`}</span>
                         </div>
                     </div>`).join('');
-                let hasMissing = o.items.some(item => (item.requested_qty || item.qty) > (item.delivered_qty || 0));
-                let badge = hasMissing ? `<span class="text-xs font-black bg-rose-100 text-rose-600 px-3 py-1.5 rounded-md border border-rose-200 whitespace-nowrap flex items-center justify-center gap-1">بها نواقص</span>` : `<span class="text-xs font-black bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-md border border-emerald-200 whitespace-nowrap flex items-center justify-center gap-1">مكتملة 100%</span>`;
-                return `<tr class="hover:bg-emerald-50/20 transition"><td class="p-3 md:p-4 align-top"><div class="font-black text-slate-800 text-base md:text-lg">فاتورة #${o.id}</div><div class="text-sm font-bold text-slate-500 mt-1">${o.agentName}</div></td><td class="p-3 md:p-4 align-top text-xs md:text-sm font-black text-slate-500">${o.delivery_date || '-'}</td><td class="p-3 md:p-4 align-top">${itemsList}</td><td class="p-3 md:p-4 align-top text-center"><div class="font-black text-slate-800 text-lg md:text-xl">${o.total.toLocaleString()} د.ع</div><div class="text-xs font-bold text-emerald-600 mt-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 inline-block">مقبوض: ${(o.cash_received || 0).toLocaleString()}</div></td><td class="p-3 md:p-4 align-top text-center">${badge}</td></tr>`;
+                
+                let badge = '';
+                if (isCancelled) {
+                    badge = `<span class="text-xs font-black bg-rose-100 text-rose-600 px-3 py-1.5 rounded-md border border-rose-200 whitespace-nowrap flex items-center justify-center gap-1">ملغاة ❌</span>`;
+                } else {
+                    let hasMissing = o.items.some(item => (item.requested_qty || item.qty) > (item.delivered_qty || 0));
+                    badge = hasMissing ? `<span class="text-xs font-black bg-rose-100 text-rose-600 px-3 py-1.5 rounded-md border border-rose-200 whitespace-nowrap flex items-center justify-center gap-1">بها نواقص</span>` : `<span class="text-xs font-black bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-md border border-emerald-200 whitespace-nowrap flex items-center justify-center gap-1">مكتملة 100%</span>`;
+                }
+
+                let totalsHtml = isCancelled 
+                    ? `<div class="font-black text-slate-400 text-lg md:text-xl line-through">${o.total.toLocaleString()} د.ع</div><div class="text-xs font-bold text-rose-500 mt-1 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 inline-block">صفر (ملغاة)</div>`
+                    : `<div class="font-black text-slate-800 text-lg md:text-xl">${o.total.toLocaleString()} د.ع</div><div class="text-xs font-bold text-emerald-600 mt-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 inline-block">مقبوض: ${(o.cash_received || 0).toLocaleString()}</div>`;
+
+                return `<tr class="${isCancelled ? 'bg-rose-50/20 hover:bg-rose-50/40' : 'hover:bg-emerald-50/20'} transition"><td class="p-3 md:p-4 align-top"><div class="font-black text-slate-800 text-base md:text-lg">فاتورة #${o.id}</div><div class="text-sm font-bold text-slate-500 mt-1">${o.agentName}</div></td><td class="p-3 md:p-4 align-top text-xs md:text-sm font-black text-slate-500">${o.delivery_date || o.date || '-'}</td><td class="p-3 md:p-4 align-top">${itemsList}</td><td class="p-3 md:p-4 align-top text-center">${totalsHtml}</td><td class="p-3 md:p-4 align-top text-center">${badge}</td></tr>`;
             }).join('') : '<tr><td colspan="5" class="text-center font-bold text-slate-400 p-8">لا توجد سجلات.</td></tr>';
 
             let missingOrdersHtml = '';
             [...completedO].reverse().forEach(o => {
+                if (o.status === 'cancelled') return;
                 let missingItemsForThisOrder = o.items.filter(item => (item.requested_qty || item.qty) > (item.delivered_qty || 0));
                 if (missingItemsForThisOrder.length > 0) {
                     let itemsList = missingItemsForThisOrder.map(item => { 
@@ -1426,7 +1475,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
 
             document.getElementById('employeesList').innerHTML = employees.map(e => `
                 <tr class="hover:bg-slate-50 transition">
-                    <td class="p-4 font-bold text-slate-700 text-base">${e.name} ${e.username === 'admin' ? '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md ml-2 border border-blue-200">المدير العام</span>' : ''} ${e.perms && e.perms.tech_portal ? '<span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md ml-1 border border-indigo-200">صانع</span>' : ''}</td>
+                    <td class="p-4 font-bold text-slate-700 text-base">${e.name} ${e.username === 'admin' ? '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md ml-2 border border-blue-200">المدير العام</span>' : ''} ${e.perms && (e.perms.tech_mfg || e.perms.tech_test) ? '<span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md ml-1 border border-indigo-200">صانع</span>' : ''}</td>
                     <td class="p-4 text-slate-500 font-black tracking-widest">${e.username}</td>
                     <td class="p-4 text-center font-black text-indigo-600">${(e.balance || 0).toLocaleString()} د.ع</td>
                     <td class="p-4 text-center flex gap-2 justify-center" style="display:${(p.emp_e||p.emp_d)?'flex':'none'}">
@@ -1463,84 +1512,81 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
         }
 
         function loadMyTasks() {
-            let list = document.getElementById('myTasksList');
-            let archiveList = document.getElementById('techArchiveList');
-            let paymentsList = document.getElementById('techPaymentsList');
-            
-            // متغيرات لتجميع البيانات بدون إرهاق المتصفح
+            let list = document.getElementById('myTasksList'); let archiveList = document.getElementById('techArchiveList'); let paymentsList = document.getElementById('techPaymentsList');
             let listHtml = ''; let archiveHtml = ''; let paymentsHtml = '';
             let hasTasks = false, hasArchive = false, hasPayments = false;
-            
-            let me = employees.find(e => e.id === currentUser.id);
-            if(me) currentUser.balance = me.balance || 0;
+            let me = employees.find(e => e.id === currentUser.id); if(me) currentUser.balance = me.balance || 0;
             document.getElementById('techBalanceDisplay').innerText = (currentUser.balance || 0).toLocaleString();
 
-            // 1. جلب المهام (الحالية والأرشيف)
-            orders.forEach(o => {
-                o.items.forEach(item => {
-                    if (String(item.tech_id) === String(currentUser.id)) {
-                        let reqQty = item.requested_qty || item.qty;
+            [...orders].reverse().forEach(o => {
+                if(o.status === 'cancelled') return;
+                [...o.items].reverse().forEach(item => {
+                    let reqQty = item.requested_qty || item.qty;
+                    let p = currentUser.perms || {};
+
+                    // 1. مهام وأرشيف الصانع (tech_id) - خاص بمرحلة التصنيع فقط
+                    if (String(item.tech_id) === String(currentUser.id) && p.tech_mfg) {
+                        
+                        if (item.mfg_status === 'tested' || item.mfg_status === 'testing_assigned' || item.mfg_status === 'manufactured') {
+                            hasArchive = true;
+                            let earn = (item.mfg_fee || 0) * reqQty;
+                            let statusText = 'تم التصنيع ✅';
+                            archiveHtml += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div class="flex items-center gap-3"><div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg></div><div><h4 class="font-black text-slate-800">${item.name}</h4><p class="text-xs font-bold text-slate-500 mt-1">العدد المصنع: ${reqQty} | الحالة: ${statusText}</p></div></div><div class="text-center"><span class="block text-xs font-bold text-slate-400">أجر التصنيع</span><span class="font-black text-indigo-600 text-lg">${earn.toLocaleString()} د.ع</span></div></div>`;
+                        } 
+                        else if (item.mfg_status === 'assigned') {
+                            hasTasks = true;
+                            listHtml += `<div class="bg-amber-50 border border-amber-200 p-5 rounded-2xl shadow-sm flex flex-col gap-3"><div class="flex gap-3 items-center"><img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 bg-white p-0.5"><div><h4 class="font-black text-amber-800 text-lg">${item.name}</h4><p class="text-xs font-bold text-amber-600">العدد المطلوب: <span class="text-rose-500">${reqQty}</span></p></div></div><div class="bg-white p-3 rounded-xl border border-amber-100 text-center"><p class="font-black text-amber-600 text-sm">تمت إحالة الطلب لك 🔔</p><p class="font-bold text-slate-500 text-xs mt-1">يرجى التوجه للمخزن لاستلام المواد للبدء بالتصنيع.</p></div></div>`;
+                        } 
+                        else if (item.mfg_status === 'in_progress') {
+                            hasTasks = true; let earn = (item.mfg_fee || 0) * reqQty;
+                            listHtml += `<div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3"><div class="flex justify-between items-start"><div class="flex gap-3 items-center"><img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5"><div><h4 class="font-black text-slate-800 text-lg">${item.name}</h4><p class="text-xs font-bold text-slate-400">العدد: <span class="text-rose-500">${reqQty}</span></p></div></div></div><div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center mt-2"><span class="text-sm font-bold text-blue-800">أجر التصنيع الإجمالي:</span><span class="font-black text-blue-700 text-lg">${earn.toLocaleString()} د.ع</span></div><button onclick="markAsManufactured(${o.id}, ${item.id}, ${earn})" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">تأكيد إتمام التصنيع</button></div>`;
+                        }
+                    }
+
+                    // 2. مهام وأرشيف الفاحص (tester_id) - خاص بمرحلة الفحص فقط
+                    if (item.tester_id && String(item.tester_id) === String(currentUser.id) && p.tech_test) {
                         
                         if (item.mfg_status === 'tested') {
-                            hasArchive = true;
-                            let totalEarned = ((item.mfg_fee || 0) + (item.test_fee || 0)) * reqQty;
-                            archiveHtml += `
-                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-                                <div class="flex items-center gap-3">
-                                    <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
-                                    <div><h4 class="font-black text-slate-800">${item.name}</h4><p class="text-xs font-bold text-slate-500 mt-1">العدد المنجز: ${reqQty} | من طلب #${o.id}</p></div>
-                                </div>
-                                <div class="text-center"><span class="block text-xs font-bold text-slate-400">الأجر المستلم</span><span class="font-black text-emerald-600 text-lg">${totalEarned.toLocaleString()} د.ع</span></div>
-                            </div>`;
-                        } else if (item.mfg_status === 'assigned') {
-                            hasTasks = true;
-                            listHtml += `
-                            <div class="bg-amber-50 border border-amber-200 p-5 rounded-2xl shadow-sm flex flex-col gap-3">
-                                <div class="flex gap-3 items-center">
-                                    <img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 bg-white p-0.5">
-                                    <div><h4 class="font-black text-amber-800 text-lg">${item.name}</h4><p class="text-xs font-bold text-amber-600">العدد المطلوب: <span class="text-rose-500">${reqQty}</span></p></div>
-                                </div>
-                                <div class="bg-white p-3 rounded-xl border border-amber-100 text-center"><p class="font-black text-amber-600 text-sm">تمت إحالة الطلب لك 🔔</p><p class="font-bold text-slate-500 text-xs mt-1">يرجى التوجه للمخزن لاستلام المواد للبدء بالتصنيع.</p></div>
-                            </div>`;
-                        } else if (item.mfg_status === 'in_progress') {
-                            hasTasks = true; let earn = (item.mfg_fee || 0) * reqQty;
-                            listHtml += `
-                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
-                                <div class="flex justify-between items-start"><div class="flex gap-3 items-center"><img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5"><div><h4 class="font-black text-slate-800 text-lg">${item.name}</h4><p class="text-xs font-bold text-slate-400">من طلب #${o.id} | العدد: <span class="text-rose-500">${reqQty}</span></p></div></div></div>
-                                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center mt-2"><span class="text-sm font-bold text-blue-800">أجر التصنيع الإجمالي:</span><span class="font-black text-blue-700 text-lg">${earn.toLocaleString()} د.ع</span></div>
-                                <button onclick="markAsManufactured(${o.id}, ${item.id}, ${earn})" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">تأكيد إتمام التصنيع</button>
-                            </div>`;
-                        } else if (item.mfg_status === 'manufactured') {
+                            hasArchive = true; let earn = (item.test_fee || 0) * reqQty;
+                            archiveHtml += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div class="flex items-center gap-3"><div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><div><h4 class="font-black text-slate-800">${item.name}</h4><p class="text-xs font-bold text-slate-500 mt-1">العدد المفحوص: ${reqQty} | دورك: فحص</p></div></div><div class="text-center"><span class="block text-xs font-bold text-slate-400">أجر الفحص</span><span class="font-black text-emerald-600 text-lg">${earn.toLocaleString()} د.ع</span></div></div>`;
+                        } 
+                        else if (item.mfg_status === 'testing_assigned') {
                             hasTasks = true; let earn = (item.test_fee || 0) * reqQty;
-                            listHtml += `
-                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
-                                <div class="flex justify-between items-start"><div class="flex gap-3 items-center"><img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5"><div><h4 class="font-black text-slate-800 text-lg">${item.name}</h4><p class="text-xs font-bold text-slate-400">مرحلة الفحص | العدد: <span class="text-emerald-500">${reqQty}</span></p></div></div></div>
-                                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center mt-2"><span class="text-sm font-bold text-emerald-800">أجر الفحص الإجمالي:</span><span class="font-black text-emerald-700 text-lg">${earn.toLocaleString()} د.ع</span></div>
-                                <button onclick="markAsTested(${o.id}, ${item.id}, ${earn})" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">تأكيد إتمام الفحص</button>
-                            </div>`;
+                            listHtml += `<div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3"><div class="flex justify-between items-start"><div class="flex gap-3 items-center"><img src="${item.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-100 p-0.5"><div><h4 class="font-black text-slate-800 text-lg">${item.name}</h4><p class="text-xs font-bold text-slate-400">مُحال لك للفحص | العدد: <span class="text-emerald-500">${reqQty}</span></p></div></div></div><div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center mt-2"><span class="text-sm font-bold text-emerald-800">أجر الفحص الإجمالي:</span><span class="font-black text-emerald-700 text-lg">${earn.toLocaleString()} د.ع</span></div><button onclick="markAsTested(${o.id}, ${item.id}, ${earn})" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-black transition shadow-md flex items-center justify-center gap-2">تأكيد إتمام الفحص</button></div>`;
                         }
                     }
                 });
             });
 
-            // 2. جلب الدفعات المستلمة
             let myPayments = expenses.filter(ex => ex.note.includes(currentUser.name) && ex.note.includes('تسديد أجور'));
-            myPayments.reverse().forEach(pm => {
-                hasPayments = true;
-                paymentsHtml += `
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-blue-100 text-blue-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
-                        <div><h4 class="font-black text-slate-800">دفعة مستلمة (نقد)</h4><p class="text-xs font-bold text-slate-500 mt-1">تاريخ الاستلام: ${pm.date}</p></div>
-                    </div>
-                    <div class="font-black text-blue-600 text-xl">${pm.amount.toLocaleString()} د.ع</div>
-                </div>`;
-            });
-
-            // 3. طباعة البيانات للشاشة دفعة واحدة (هنا يكمن تسريع النظام)
-            list.innerHTML = hasTasks ? listHtml : `<div class="col-span-full bg-slate-50 p-10 rounded-2xl border border-slate-200 text-center"><p class="text-slate-500 font-bold">لا توجد مهام حالية مسندة إليك.</p></div>`;
+            myPayments.reverse().forEach(pm => { hasPayments = true; paymentsHtml += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div class="flex items-center gap-3"><div class="bg-blue-100 text-blue-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><h4 class="font-black text-slate-800">دفعة مستلمة (نقد)</h4><p class="text-xs font-bold text-slate-500 mt-1">التاريخ: ${pm.date}</p></div></div><div class="font-black text-blue-600 text-xl">${pm.amount.toLocaleString()} د.ع</div></div>`; });
+            list.innerHTML = hasTasks ? listHtml : `<div class="col-span-full bg-slate-50 p-10 rounded-2xl border border-slate-200 text-center"><p class="text-slate-500 font-bold">لا توجد مهام حالية מסندة إليك.</p></div>`;
             archiveList.innerHTML = hasArchive ? archiveHtml : `<div class="bg-slate-50 p-10 rounded-2xl border border-slate-200 text-center"><p class="text-slate-500 font-bold">لم تنجز أي أجهزة حتى الآن.</p></div>`;
             paymentsList.innerHTML = hasPayments ? paymentsHtml : `<div class="bg-slate-50 p-10 rounded-2xl border border-slate-200 text-center"><p class="text-slate-500 font-bold">لم يتم تسجيل أي دفعات لك بعد.</p></div>`;
+        }
+
+        async function cancelOrder(orderId) {
+            if(confirm("هل أنت متأكد من إلغاء هذه الطلبية نهائياً؟ سيتم إشعار الوكيل بذلك عبر التليكرام.")) {
+                let o = orders.find(x => String(x.id) === String(orderId));
+                if(o) {
+                    o.status = 'cancelled';
+                    o.delivery_date = getNow(); // 🟢 هنا ضفنا تاريخ الإلغاء حتى تنزل بالمكتملة
+                    
+                    if(o.agentId !== 'internal_store') {
+                        try {
+                            fetch(`${API_URL}/cancel_order`, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({order_id: o.id, agent_name: o.agentName})
+                            });
+                        } catch(e) {}
+                    }
+
+                    await saveDataBulk([{key: 'orders', data: orders}]);
+                    updateUI();
+                    showToast("تم إلغاء الطلبية بنجاح", "success");
+                }
+            }
         }
 
         async function markAsManufactured(orderId, itemId, earnAmount) {
@@ -1563,6 +1609,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                 let item = order.items.find(i => String(i.id) === String(itemId));
                 let emp = employees.find(e => e.id === currentUser.id);
                 item.mfg_status = 'tested';
+                item.tester_id = currentUser.id;
                 emp.balance = (emp.balance || 0) + earnAmount;
                 currentUser.balance = emp.balance;
                 
@@ -1609,7 +1656,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             document.getElementById('assignItemName').innerText = `${itemName} (العدد: ${qty})`;
             let techSelect = document.getElementById('assignTechSelect');
             techSelect.innerHTML = '<option value="" disabled selected>اختر الصانع...</option>';
-            let techs = employees.filter(e => e.perms && e.perms.tech_portal);
+            let techs = employees.filter(e => e.perms && e.perms.tech_mfg);
             if(techs.length === 0) {
                 techSelect.innerHTML = '<option value="" disabled>لا يوجد موظفين بصلاحية صانع!</option>';
             } else {
@@ -1739,51 +1786,78 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
         }
 
         async function confirmFulfillment() {
-            if (currentFulfillOrderIndex === -1) return; let o = orders[currentFulfillOrderIndex];
-            let actualNewTotal = parseInt(document.getElementById('ffActualTotal').dataset.total) || 0; let newCash = parseInt(document.getElementById('ffCashReceived').value) || 0;
+            if (currentFulfillOrderIndex === -1) return; 
             
-            let a = agents.find(x => x.id === o.agentId);
-            if(a) {
-                a.debt = (a.debt || 0) + (actualNewTotal - newCash); let newItemsCount = 0;
-                o.items.forEach((item, i) => {
-                    let input = document.getElementById(`ff_qty_${i}`);
-                    if(input) {
-                        let newlyDeliveredQty = parseInt(input.value) || 0;
-                        if (newlyDeliveredQty > 0) {
-                            let ai = a.inventory.find(x => x.id === item.id); if(ai) ai.qty += newlyDeliveredQty; else a.inventory.push({...item, qty: newlyDeliveredQty});
-                            let mp = products.find(p => p.id === item.id); if(mp) { mp.qty -= newlyDeliveredQty; if(mp.qty < 0) mp.qty = 0; }
-                            newItemsCount += newlyDeliveredQty;
-                        }
-                        item.requested_qty = item.requested_qty || item.qty;
-                        if(isFulfillingMissing) { item.delivered_qty = (item.delivered_qty || 0) + newlyDeliveredQty; } else { item.delivered_qty = newlyDeliveredQty; }
-                    }
-                });
-                a.sales_count = (a.sales_count || 0) + newItemsCount;
+            let btn = document.getElementById('btnConfirmFulfill');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div> جاري المعالجة...';
 
-                // --- هذا الكود اللي جان مفقود عندك (لتوليد وصل التسديد) ---
-                if(newCash > 0) {
-                    payments.push({
-                        id: Date.now() + Math.floor(Math.random() * 1000), 
-                        date: getNow(), 
-                        agentId: a.id, 
-                        agentName: a.name, 
-                        amount: newCash, 
-                        note: `دفعة نقدية أثناء تجهيز طلبية #${o.id}`, 
-                        status: 'approved', 
-                        approved_by: currentUser ? currentUser.name : 'النظام', 
-                        approved_date: getNow()
+            try {
+                let o = orders[currentFulfillOrderIndex];
+                let actualNewTotal = parseInt(document.getElementById('ffActualTotal').dataset.total) || 0; 
+                let newCash = parseInt(document.getElementById('ffCashReceived').value) || 0;
+                
+                let a = agents.find(x => x.id === o.agentId);
+                if(a) {
+                    a.debt = (a.debt || 0) + (actualNewTotal - newCash); 
+                    let newItemsCount = 0;
+                    
+                    o.items.forEach((item, i) => {
+                        let input = document.getElementById(`ff_qty_${i}`);
+                        if(input) {
+                            let newlyDeliveredQty = parseInt(input.value) || 0;
+                            if (newlyDeliveredQty > 0) {
+                                let ai = a.inventory.find(x => x.id === item.id); 
+                                if(ai) ai.qty += newlyDeliveredQty; 
+                                else a.inventory.push({...item, qty: newlyDeliveredQty});
+                                
+                                let mp = products.find(p => p.id === item.id); 
+                                if(mp) { mp.qty -= newlyDeliveredQty; if(mp.qty < 0) mp.qty = 0; }
+                                newItemsCount += newlyDeliveredQty;
+                            }
+                            item.requested_qty = item.requested_qty || item.qty;
+                            if(isFulfillingMissing) { item.delivered_qty = (item.delivered_qty || 0) + newlyDeliveredQty; } 
+                            else { item.delivered_qty = newlyDeliveredQty; }
+                        }
                     });
+                    a.sales_count = (a.sales_count || 0) + newItemsCount;
+
+                    if(newCash > 0) {
+                        payments.push({
+                            id: Date.now() + Math.floor(Math.random() * 1000), 
+                            date: getNow(), 
+                            agentId: a.id, 
+                            agentName: a.name, 
+                            amount: newCash, 
+                            note: `دفعة نقدية أثناء تجهيز طلبية #${o.id}`, 
+                            status: 'approved', 
+                            approved_by: currentUser ? currentUser.name : 'النظام', 
+                            approved_date: getNow()
+                        });
+                    }
                 }
-                // -------------------------------------------------------------
+                
+                stats.sales = (stats.sales || 0) + actualNewTotal; 
+                stats.cash = (stats.cash || 0) + newCash;
+                
+                if(isFulfillingMissing) { 
+                    o.total += actualNewTotal; 
+                    o.cash_received = (o.cash_received || 0) + newCash; 
+                } else { 
+                    o.total = actualNewTotal; 
+                    o.cash_received = newCash; 
+                    o.status = 'delivered'; 
+                }
+                o.delivery_date = getNow();
+                
+                closeFulfillmentModal(); 
+                updateUI();
+                await saveDataBulk([{key:'orders', data:orders}, {key:'agents', data:agents}, {key:'products', data:products}, {key:'stats', data:stats}, {key:'payments', data:payments}]);
+                showToast("تم تجهيز الطلبية بنجاح!");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'تأكيد التجهيز';
             }
-            stats.sales = (stats.sales || 0) + actualNewTotal; stats.cash = (stats.cash || 0) + newCash;
-            
-            if(isFulfillingMissing) { o.total += actualNewTotal; o.cash_received = (o.cash_received || 0) + newCash; } 
-            else { o.total = actualNewTotal; o.cash_received = newCash; o.status = 'delivered'; }
-            o.delivery_date = getNow();
-            
-            closeFulfillmentModal(); 
-            await saveDataBulk([{key:'orders', data:orders}, {key:'agents', data:agents}, {key:'products', data:products}, {key:'stats', data:stats}, {key:'payments', data:payments}]);
         }
 
         function openDirectPaymentModal() {
@@ -2021,6 +2095,21 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                 showToast("حدث خطأ أثناء رفع الملف للسيرفر!", "error");
             }
             event.target.value = "";
+        }
+async function confirmTesterAssign(oId, iId) {
+            let techId = document.getElementById(`tester_sel_${oId}_${iId}`).value;
+            if(!techId) return showToast('يرجى اختيار الفاحص أولاً', 'error');
+            let order = orders.find(o => String(o.id) === String(oId));
+            if(order) {
+                let item = order.items.find(i => String(i.id) === String(iId));
+                if(item) {
+                    item.mfg_status = 'testing_assigned';
+                    item.tester_id = techId;
+                    updateUI();
+                    await saveDataBulk([{key: 'orders', data: orders}]);
+                    showToast('تمت إحالة الجهاز للفحص بنجاح');
+                }
+            }
         }
 
     </script>
