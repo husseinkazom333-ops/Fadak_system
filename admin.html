@@ -694,6 +694,23 @@
             } catch(e) { showToast("خطأ بالاتصال.", "error"); } finally { btn.innerHTML = 'دخول للنظام'; btn.disabled = false; }
         }
 
+        // 🟢 دالة الباك أب التلقائي المجانية (تشتغل مرة وحدة باليوم)
+        function checkAndRunAutoBackup() {
+            let today = new Date().toLocaleDateString(); 
+            let lastBackup = localStorage.getItem('last_auto_backup_date');
+            
+            if (lastBackup !== today) {
+                fetch(`${API_URL}/auto_backup?_t=${new Date().getTime()}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        localStorage.setItem('last_auto_backup_date', today);
+                        showToast("📦 تم إرسال النسخة الاحتياطية اليومية للتليكرام تلقائياً.");
+                    }
+                }).catch(e => console.log("تأجيل الباك أب التلقائي"));
+            }
+        }
+
         function enterApp() {
             currentUser = JSON.parse(localStorage.getItem('current_user')); if(!currentUser) return logoutAdmin();
             if(currentUser.username === 'admin') { 
@@ -708,6 +725,9 @@
             }
             document.getElementById('adminLoginScreen').classList.add('hidden'); document.getElementById('adminApp').classList.remove('hidden'); document.getElementById('headerUserName').innerText = `الموظف: ${currentUser.name}`; document.getElementById('currentUserRoleDisplay').innerText = currentUser.username === 'admin' ? 'المدير العام' : 'صلاحيات مخصصة';
             applyPermissions(); loadData();
+            
+            // 🟢 تشغيل فحص الباك أب التلقائي أول ما يفتح المدير النظام (بعد 5 ثواني)
+            setTimeout(checkAndRunAutoBackup, 5000);
         }
         
                 function applyPermissions() {
