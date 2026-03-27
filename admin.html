@@ -1594,7 +1594,17 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                 let order = orders.find(o => o.id === orderId);
                 let item = order.items.find(i => i.id === itemId);
                 let emp = employees.find(e => e.id === currentUser.id);
-                item.mfg_status = 'manufactured';
+                
+                // 🟢 الذكاء الجديد: التحقق من صلاحية الفحص
+                if (currentUser.perms && currentUser.perms.tech_test) {
+                    // إذا الموظف عنده صلاحية فحص، النظام يحيلها إله تلقائياً
+                    item.mfg_status = 'testing_assigned';
+                    item.tester_id = currentUser.id; 
+                } else {
+                    // إذا الموظف مجرد صانع، تروح للإدارة لغرض الإحالة
+                    item.mfg_status = 'manufactured'; 
+                }
+                
                 emp.balance = (emp.balance || 0) + earnAmount;
                 currentUser.balance = emp.balance;
                 updateUI();
