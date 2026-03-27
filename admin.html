@@ -1518,20 +1518,23 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             let me = employees.find(e => e.id === currentUser.id); if(me) currentUser.balance = me.balance || 0;
             document.getElementById('techBalanceDisplay').innerText = (currentUser.balance || 0).toLocaleString();
 
+            let tempArchiveArr = []; // 🟢 مصفوفة لترتيب الأرشيف حسب الأحدث
+
             [...orders].reverse().forEach(o => {
                 if(o.status === 'cancelled') return;
                 [...o.items].reverse().forEach(item => {
                     let reqQty = item.requested_qty || item.qty;
                     let p = currentUser.perms || {};
 
-                    // 1. مهام وأرشيف الصانع (tech_id) - خاص بمرحلة التصنيع فقط
+                    // 1. مهام وأرشيف الصانع
                     if (String(item.tech_id) === String(currentUser.id) && p.tech_mfg) {
-                        
                         if (item.mfg_status === 'tested' || item.mfg_status === 'testing_assigned' || item.mfg_status === 'manufactured') {
                             hasArchive = true;
                             let earn = (item.mfg_fee || 0) * reqQty;
-                            let statusText = 'تم التصنيع ✅';
-                            archiveHtml += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div class="flex items-center gap-3"><div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg></div><div><h4 class="font-black text-slate-800">${item.name}</h4><p class="text-xs font-bold text-slate-500 mt-1">العدد المصنع: ${reqQty} | الحالة: ${statusText}</p></div></div><div class="text-center"><span class="block text-xs font-bold text-slate-400">أجر التصنيع</span><span class="font-black text-indigo-600 text-lg">${earn.toLocaleString()} د.ع</span></div></div>`;
+                            let mDate = item.mfg_date || o.date; // 🟢 جلب التاريخ
+                            let mTs = item.mfg_ts || o.id; // 🟢 جلب الطابع الزمني للترتيب
+                            let html = `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div class="flex items-center gap-3"><div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg></div><div><h4 class="font-black text-slate-800">${item.name}</h4><p class="text-xs font-bold text-slate-500 mt-1">العدد المصنع: ${reqQty} | الحالة: تم التصنيع ✅</p><p class="text-[10px] font-bold text-indigo-400 mt-1">تاريخ الإنجاز: ${mDate}</p></div></div><div class="text-center"><span class="block text-xs font-bold text-slate-400">أجر التصنيع</span><span class="font-black text-indigo-600 text-lg">${earn.toLocaleString()} د.ع</span></div></div>`;
+                            tempArchiveArr.push({ html: html, ts: mTs });
                         } 
                         else if (item.mfg_status === 'assigned') {
                             hasTasks = true;
@@ -1543,12 +1546,14 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                         }
                     }
 
-                    // 2. مهام وأرشيف الفاحص (tester_id) - خاص بمرحلة الفحص فقط
+                    // 2. مهام وأرشيف الفاحص
                     if (item.tester_id && String(item.tester_id) === String(currentUser.id) && p.tech_test) {
-                        
                         if (item.mfg_status === 'tested') {
                             hasArchive = true; let earn = (item.test_fee || 0) * reqQty;
-                            archiveHtml += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div class="flex items-center gap-3"><div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><div><h4 class="font-black text-slate-800">${item.name}</h4><p class="text-xs font-bold text-slate-500 mt-1">العدد المفحوص: ${reqQty} | دورك: فحص</p></div></div><div class="text-center"><span class="block text-xs font-bold text-slate-400">أجر الفحص</span><span class="font-black text-emerald-600 text-lg">${earn.toLocaleString()} د.ع</span></div></div>`;
+                            let tDate = item.test_date || o.date; // 🟢 جلب التاريخ
+                            let tTs = item.test_ts || o.id; // 🟢 جلب الطابع الزمني
+                            let html = `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div class="flex items-center gap-3"><div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><div><h4 class="font-black text-slate-800">${item.name}</h4><p class="text-xs font-bold text-slate-500 mt-1">العدد المفحوص: ${reqQty} | دورك: فحص</p><p class="text-[10px] font-bold text-emerald-400 mt-1">تاريخ الإنجاز: ${tDate}</p></div></div><div class="text-center"><span class="block text-xs font-bold text-slate-400">أجر الفحص</span><span class="font-black text-emerald-600 text-lg">${earn.toLocaleString()} د.ع</span></div></div>`;
+                            tempArchiveArr.push({ html: html, ts: tTs });
                         } 
                         else if (item.mfg_status === 'testing_assigned') {
                             hasTasks = true; let earn = (item.test_fee || 0) * reqQty;
@@ -1557,6 +1562,10 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                     }
                 });
             });
+
+            // 🟢 ترتيب الأرشيف بحيث يكون الأحدث بالبداية
+            tempArchiveArr.sort((a, b) => b.ts - a.ts);
+            archiveHtml = tempArchiveArr.map(x => x.html).join('');
 
             let myPayments = expenses.filter(ex => ex.note.includes(currentUser.name) && ex.note.includes('تسديد أجور'));
             myPayments.reverse().forEach(pm => { hasPayments = true; paymentsHtml += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div class="flex items-center gap-3"><div class="bg-blue-100 text-blue-600 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><h4 class="font-black text-slate-800">دفعة مستلمة (نقد)</h4><p class="text-xs font-bold text-slate-500 mt-1">التاريخ: ${pm.date}</p></div></div><div class="font-black text-blue-600 text-xl">${pm.amount.toLocaleString()} د.ع</div></div>`; });
@@ -1595,16 +1604,18 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                 let item = order.items.find(i => i.id === itemId);
                 let emp = employees.find(e => e.id === currentUser.id);
                 
-                // 🟢 الذكاء الجديد: التحقق من صلاحية الفحص
+                // التحقق من صلاحية الفحص
                 if (currentUser.perms && currentUser.perms.tech_test) {
-                    // إذا الموظف عنده صلاحية فحص، النظام يحيلها إله تلقائياً
                     item.mfg_status = 'testing_assigned';
                     item.tester_id = currentUser.id; 
                 } else {
-                    // إذا الموظف مجرد صانع، تروح للإدارة لغرض الإحالة
                     item.mfg_status = 'manufactured'; 
                 }
                 
+                // 🟢 تسجيل وقت وتاريخ التصنيع بدقة
+                item.mfg_date = getNow(); 
+                item.mfg_ts = Date.now(); 
+
                 emp.balance = (emp.balance || 0) + earnAmount;
                 currentUser.balance = emp.balance;
                 updateUI();
@@ -1620,24 +1631,22 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                 let emp = employees.find(e => e.id === currentUser.id);
                 item.mfg_status = 'tested';
                 item.tester_id = currentUser.id;
+                
+                // 🟢 تسجيل وقت وتاريخ الفحص بدقة
+                item.test_date = getNow(); 
+                item.test_ts = Date.now(); 
+
                 emp.balance = (emp.balance || 0) + earnAmount;
                 currentUser.balance = emp.balance;
                 
-                // --- التعديل الجذري هنا لأوامر المخزن الداخلي ---
                 if (order.agentId === 'internal_store') {
                     let product = products.find(p => String(p.id) === String(item.id));
                     let reqQty = item.requested_qty || item.qty;
-                    if (product) {
-                        // 1. إضافة الأجهزة المصنعة إلى (مخزن المكتمل)
-                        product.qty = (product.qty || 0) + reqQty; 
-                    }
-                    // 2. تسجيلها كمكتملة 100% حتى لا تروح لقائمة النواقص
+                    if (product) { product.qty = (product.qty || 0) + reqQty; }
                     item.delivered_qty = reqQty; 
-                    // 3. إنهاء الطلب وتوثيق التاريخ
                     order.status = 'delivered'; 
                     order.delivery_date = getNow(); 
                 }
-                // ----------------------------------------
 
                 updateUI();
                 await saveDataBulk([{key: 'orders', data: orders}, {key: 'employees', data: employees}, {key: 'products', data: products}]);
