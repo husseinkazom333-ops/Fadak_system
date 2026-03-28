@@ -95,6 +95,10 @@
                     </div>
                     <span id="ordersBadge" class="bg-rose-500 text-white text-xs px-2.5 py-0.5 rounded-full hidden font-black shadow-sm">0</span>
                 </button>
+                <button id="nav-actual_sales" onclick="switchTab('actual_sales')" class="tab-btn w-full flex items-center gap-3 hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="actual_sales">
+                    <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"></path></svg>
+                    المبيعات الفعلية
+                </button>
                 <button id="nav-returns" onclick="switchTab('returns')" class="tab-btn w-full flex items-center justify-between hover:bg-slate-800 p-4 rounded-xl font-bold transition" data-tab="returns">
                     <div class="flex items-center gap-3">
                         <svg class="icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
@@ -301,9 +305,32 @@
 
                 <div id="rawMaterialsSection" class="section-content hidden w-full">
                     <form id="addRawForm" class="bg-white p-6 rounded-3xl shadow-sm border mb-6 flex flex-col md:flex-row gap-4 items-end">
-                        <div class="flex-1 w-full"><label class="block text-xs font-black text-slate-400 mb-1">اسم المادة الأولية</label><input type="text" id="rawName" placeholder="مثال: بورد، شاشة، كارت..." class="w-full p-3 bg-slate-50 border rounded-xl font-bold" required></div>
-                        <div class="w-full md:w-48"><label class="block text-xs font-black text-slate-400 mb-1">التكلفة (للقطعة)</label><input type="number" id="rawCost" inputmode="numeric" pattern="[0-9]*" placeholder="د.ع" class="w-full p-3 bg-slate-50 border rounded-xl font-bold" required></div>
-                        <div class="w-full md:w-32"><label class="block text-xs font-black text-slate-400 mb-1">الرصيد الافتتاحي</label><input type="number" id="rawQty" inputmode="numeric" pattern="[0-9]*" value="0" class="w-full p-3 bg-slate-50 border rounded-xl font-bold" required></div>
+                        <div class="flex-1 w-full"><label class="block text-xs font-black text-slate-400 mb-1">اسم المادة</label><input type="text" id="rawName" placeholder="مثال: بورد، شاشة..." class="w-full p-3 bg-slate-50 border rounded-xl font-bold" required></div>
+                        
+                        <div class="w-full md:w-32"><label class="block text-xs font-black text-slate-400 mb-1">التكلفة (للقطعة)</label><input type="number" id="rawCost" step="any" placeholder="د.ع" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-left" dir="ltr" required></div>
+                        
+                        <div class="w-full md:w-auto flex flex-col gap-1">
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 cursor-pointer w-fit">
+                                <input type="checkbox" id="useSets" onchange="toggleSetsInput()" class="accent-blue-600 w-3 h-3"> إدخال بنظام السيتات
+                            </label>
+                            <div class="flex gap-2 items-end">
+                                <div id="normalQtyDiv" class="w-full md:w-24">
+                                    <label class="block text-xs font-black text-slate-400 mb-1">إجمالي القطع</label>
+                                    <input type="number" id="rawQty" inputmode="numeric" value="0" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-center" required>
+                                </div>
+                                <div id="setsDiv" class="hidden flex gap-2">
+                                    <div class="w-20 md:w-20">
+                                        <label class="block text-xs font-black text-blue-500 mb-1">كم سيت؟</label>
+                                        <input type="number" id="rawSets" min="1" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-xl font-bold text-center outline-none" oninput="calcSets()">
+                                    </div>
+                                    <div class="w-20 md:w-20">
+                                        <label class="block text-xs font-black text-emerald-500 mb-1">قطع السيت</label>
+                                        <input type="number" id="rawPerSet" min="1" class="w-full p-3 bg-emerald-50 border border-emerald-200 rounded-xl font-bold text-center outline-none" oninput="calcSets()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex gap-2 w-full md:w-auto">
                             <button type="submit" id="btnSubmitRaw" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-black transition flex items-center justify-center gap-2">إضافة</button>
                             <button type="button" id="btnCancelRaw" onclick="cancelRawEdit()" class="hidden flex-1 md:flex-none bg-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-black transition">إلغاء</button>
@@ -351,6 +378,30 @@
                     <div id="pendingOrdersContainer" class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full"><div class="overflow-x-auto scroll-touch"><table class="w-full text-right min-w-[700px]"><thead class="bg-blue-50 text-blue-700 text-sm border-b border-blue-100"><tr><th class="p-4 w-1/4">الطلب والوكيل</th><th class="p-4 w-1/4">التاريخ</th><th class="p-4 w-1/4">المواد المطلوبة</th><th class="p-4 text-center">الإجمالي</th><th class="p-4 text-center">إجراء</th></tr></thead><tbody id="pendingOrdersTbody" class="divide-y divide-slate-100"></tbody></table></div></div>
                     <div id="completedOrdersContainer" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full"><div class="overflow-x-auto scroll-touch"><table class="w-full text-right min-w-[800px]"><thead class="bg-emerald-50 text-emerald-700 text-sm border-b border-emerald-100"><tr><th class="p-4">الفاتورة والوكيل</th><th class="p-4">تاريخ التسليم</th><th class="p-4">المواد المجهزة فعلياً</th><th class="p-4 text-center">الصافي والمقبوض</th><th class="p-4 text-center">الحالة</th></tr></thead><tbody id="completedOrdersTbody" class="divide-y divide-slate-100"></tbody></table></div></div>
                     <div id="missingOrdersContainer" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full"><div class="overflow-x-auto scroll-touch"><table class="w-full text-right min-w-[800px]"><thead class="bg-rose-50 text-rose-700 text-sm border-b border-rose-100"><tr><th class="p-4">الطلبية والوكيل</th><th class="p-4">تاريخ الطلب الأصلي</th><th class="p-4">المواد الناقصة</th><th class="p-4 text-center">إجراء</th></tr></thead><tbody id="missingOrdersTbody" class="divide-y divide-slate-100"></tbody></table></div></div>
+                </div>
+
+                <div id="actual_salesSection" class="section-content hidden space-y-6 w-full">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-black text-blue-800">سجل التجهيز والمبيعات الفعلية</h2>
+                            <select id="salesEmpFilter" onchange="loadActualSales()" class="p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none text-slate-700">
+                                <option value="all">الكل (جميع الموظفين)</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto scroll-touch">
+                            <table class="w-full text-right min-w-[800px]">
+                                <thead class="bg-slate-50 text-slate-400 text-xs border-b border-slate-100 uppercase">
+                                    <tr id="actualSalesTheadRow">
+                                        <th class="p-4">الطلبية والتاريخ</th>
+                                        <th class="p-4">الوكيل</th>
+                                        <th class="p-4">المُجهز (الموظف)</th>
+                                        <th class="p-4 text-center">صور الأجهزة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="actualSalesTbody" class="divide-y divide-slate-50"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="returnsSection" class="section-content hidden space-y-4 max-w-4xl mx-auto w-full"><div id="returnsContainer"></div></div>
@@ -599,6 +650,8 @@
                             <label class="cursor-pointer hover:text-rose-500 flex items-center gap-1.5"><input type="checkbox" id="chk_ord_miss_v" class="perm-sub-checkbox ord-sub"> رؤية (سجل النواقص)</label>
                             <div class="border-t border-blue-100 my-1"></div>
                             <label class="cursor-pointer text-blue-700 font-black flex items-center gap-1.5"><input type="checkbox" id="chk_ord_e" class="perm-sub-checkbox ord-sub"> أزرار (التجهيز والاستكمال)</label>
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5 mt-2"><input type="checkbox" id="chk_actual_sales_v" class="perm-sub-checkbox ord-sub"> سجل المبيعات الفعلية (للمجهزين)</label>
+                            <label class="cursor-pointer hover:text-blue-500 flex items-center gap-1.5 mt-1"><input type="checkbox" id="chk_actual_sales_pay" class="perm-sub-checkbox ord-sub"> تسديد وإدارة عمولة التسويق</label>
                         </div>
                     </div>
 
@@ -737,6 +790,8 @@
             document.getElementById('nav-rawMaterials').style.display = p.raw_v ? 'flex' : 'none'; // التعديل هنا للمواد
             document.getElementById('nav-inventory').style.display = p.prod_v ? 'flex' : 'none'; 
             document.getElementById('nav-orders').style.display = p.ord_v ? 'flex' : 'none'; 
+            if(document.getElementById('nav-actual_sales')) document.getElementById('nav-actual_sales').style.display = (p.actual_sales_v || currentUser.username === 'admin') ? 'flex' : 'none';
+
             document.getElementById('nav-returns').style.display = p.ret_v ? 'flex' : 'none'; 
             document.getElementById('nav-payments').style.display = p.pay_v ? 'flex' : 'none'; 
             document.getElementById('nav-expenses').style.display = p.exp_v ? 'flex' : 'none'; 
@@ -1094,12 +1149,35 @@
             }
         }
 
+        function toggleSetsInput() {
+            const useSets = document.getElementById('useSets').checked;
+            const rawQty = document.getElementById('rawQty');
+            if(useSets) {
+                document.getElementById('setsDiv').classList.remove('hidden');
+                rawQty.classList.add('bg-slate-200', 'text-slate-500');
+                rawQty.readOnly = true;
+                calcSets();
+            } else {
+                document.getElementById('setsDiv').classList.add('hidden');
+                rawQty.classList.remove('bg-slate-200', 'text-slate-500');
+                rawQty.readOnly = false;
+            }
+        }
+
+        function calcSets() {
+            let sets = parseInt(document.getElementById('rawSets').value) || 0;
+            let perSet = parseInt(document.getElementById('rawPerSet').value) || 0;
+            if(document.getElementById('useSets').checked) {
+                document.getElementById('rawQty').value = sets * perSet;
+            }
+        }
+
         document.getElementById('addRawForm').addEventListener('submit', async e => {
             e.preventDefault();
             let raw = {
                 id: editRawId || Date.now(),
                 name: document.getElementById('rawName').value,
-                cost: parseInt(document.getElementById('rawCost').value),
+                cost: parseFloat(document.getElementById('rawCost').value), // 🟢 قبول الكسور (2.5 مثلاً)
                 qty: parseInt(document.getElementById('rawQty').value)
             };
             if(editRawId) {
@@ -1111,7 +1189,10 @@
             }
             updateUI();
             await saveDataBulk([{key: 'rawMaterials', data: rawMaterials}]);
-            if(!editRawId) e.target.reset();
+            if(!editRawId) {
+                e.target.reset();
+                if(document.getElementById('useSets')) { document.getElementById('useSets').checked = false; toggleSetsInput(); }
+            }
         });
 
         function editRawMaterial(id) {
@@ -1122,6 +1203,13 @@
             document.getElementById('rawQty').value = raw.qty;
             document.getElementById('btnSubmitRaw').innerHTML = 'تعديل';
             document.getElementById('btnCancelRaw').classList.remove('hidden');
+            
+            // إيقاف السيتات عند التعديل
+            if(document.getElementById('useSets')) {
+                document.getElementById('useSets').checked = false;
+                toggleSetsInput();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelRawEdit() {
@@ -1129,6 +1217,10 @@
             document.getElementById('addRawForm').reset();
             document.getElementById('btnSubmitRaw').innerHTML = 'إضافة';
             document.getElementById('btnCancelRaw').classList.add('hidden');
+            if(document.getElementById('useSets')) {
+                document.getElementById('useSets').checked = false;
+                toggleSetsInput();
+            }
         }
 
         async function deleteRawMaterial(id) {
@@ -1204,7 +1296,7 @@
                     dash: document.getElementById('chk_dash').checked, 
                     prod_v: document.getElementById('chk_prod_v').checked, prod_a: document.getElementById('chk_prod_a').checked, prod_e: document.getElementById('chk_prod_e').checked, prod_d: document.getElementById('chk_prod_d').checked, 
                     raw_v: document.getElementById('chk_raw_v') ? document.getElementById('chk_raw_v').checked : false, raw_a: document.getElementById('chk_raw_a') ? document.getElementById('chk_raw_a').checked : false, int_ord_a: document.getElementById('chk_int_ord_a') ? document.getElementById('chk_int_ord_a').checked : false,
-                    ord_v: document.getElementById('chk_ord_v').checked, ord_pending_v: document.getElementById('chk_ord_pending_v').checked, ord_comp_v: document.getElementById('chk_ord_comp_v').checked, ord_miss_v: document.getElementById('chk_ord_miss_v').checked, ord_e: document.getElementById('chk_ord_e').checked, 
+                    ord_v: document.getElementById('chk_ord_v').checked, ord_pending_v: document.getElementById('chk_ord_pending_v').checked, ord_comp_v: document.getElementById('chk_ord_comp_v').checked, ord_miss_v: document.getElementById('chk_ord_miss_v').checked, ord_e: document.getElementById('chk_ord_e').checked, actual_sales_v: document.getElementById('chk_actual_sales_v') ? document.getElementById('chk_actual_sales_v').checked : false, actual_sales_pay: document.getElementById('chk_actual_sales_pay') ? document.getElementById('chk_actual_sales_pay').checked : false, 
                     ret_v: document.getElementById('chk_ret_v').checked, ret_a: document.getElementById('chk_ret_a').checked, 
                     pay_v: document.getElementById('chk_pay_v').checked, pay_a: document.getElementById('chk_pay_a').checked, pay_d: document.getElementById('chk_pay_d').checked, pay_hist_v: document.getElementById('chk_pay_hist_v').checked,
                     exp_v: document.getElementById('chk_exp_v').checked, exp_a: document.getElementById('chk_exp_a').checked, exp_e: document.getElementById('chk_exp_e').checked, exp_d: document.getElementById('chk_exp_d').checked, 
@@ -1236,6 +1328,8 @@
             if(document.getElementById('chk_raw_a')) document.getElementById('chk_raw_a').checked = !!p.raw_a;
             if(document.getElementById('chk_int_ord_a')) document.getElementById('chk_int_ord_a').checked = !!p.int_ord_a;
             document.getElementById('chk_ord_v').checked = !!p.ord_v; document.getElementById('chk_ord_pending_v').checked = !!p.ord_pending_v; document.getElementById('chk_ord_comp_v').checked = !!p.ord_comp_v; document.getElementById('chk_ord_miss_v').checked = !!p.ord_miss_v; document.getElementById('chk_ord_e').checked = !!p.ord_e; 
+            if(document.getElementById('chk_actual_sales_v')) document.getElementById('chk_actual_sales_v').checked = !!p.actual_sales_v;
+            if(document.getElementById('chk_actual_sales_pay')) document.getElementById('chk_actual_sales_pay').checked = !!p.actual_sales_pay;
             document.getElementById('chk_ret_v').checked = !!p.ret_v; document.getElementById('chk_ret_a').checked = !!p.ret_a; 
             document.getElementById('chk_pay_v').checked = !!p.pay_v; document.getElementById('chk_pay_a').checked = !!p.pay_a; document.getElementById('chk_pay_d').checked = !!p.pay_d; document.getElementById('chk_pay_hist_v').checked = !!p.pay_hist_v;
             document.getElementById('chk_exp_v').checked = !!p.exp_v; document.getElementById('chk_exp_a').checked = !!p.exp_a; document.getElementById('chk_exp_e').checked = !!p.exp_e; document.getElementById('chk_exp_d').checked = !!p.exp_d; 
@@ -1482,7 +1576,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             }
             document.getElementById('historyPaymentsTbody').innerHTML = histHtml;
 
-            document.getElementById('expensesList').innerHTML = expenses.map(ex => `
+            document.getElementById('expensesList').innerHTML = [...expenses].reverse().map(ex => `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="p-4 font-bold text-slate-700 text-base">${ex.note}</td>
                     <td class="p-4 font-black text-rose-600 text-xl">${ex.amount.toLocaleString()} د.ع</td>
@@ -1889,6 +1983,12 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
                 }
                 o.delivery_date = getNow();
                 
+                // 🟢 حفظ بيانات الموظف المجهز
+                o.prepared_by_id = currentUser.id;
+                o.prepared_by_name = currentUser.name;
+                o.prepared_date = getNow();
+                if(o.prep_percent === undefined) o.prep_percent = 0;
+                
                 closeFulfillmentModal(); 
                 updateUI();
                 await saveDataBulk([{key:'orders', data:orders}, {key:'agents', data:agents}, {key:'products', data:products}, {key:'stats', data:stats}, {key:'payments', data:payments}]);
@@ -1971,7 +2071,7 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             document.getElementById(id + 'Section').classList.remove('hidden'); 
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-blue-600', 'text-white')); 
             document.querySelector(`[data-tab="${id}"]`).classList.add('bg-blue-600', 'text-white'); 
-                                    document.getElementById('pageTitle').innerText = {'dashboard':'الإحصائيات والمالية','settings':'إعدادات التسعير','pricing':'جدول التسعير الذكي','addProduct':'إضافة جهاز','rawMaterials':'المواد الأولية','inventory':'المخزن والجرد','orders':'إدارة الطلبيات','returns':'المرتجعات','payments':'التسديدات المالية','expenses':'المصروفات','agents':'الوكلاء','employees':'إدارة الموظفين', 'myTasks':'مهام التصنيع والفحص'}[id]; 
+                                    document.getElementById('pageTitle').innerText = {'dashboard':'الإحصائيات والمالية','settings':'إعدادات التسعير','pricing':'جدول التسعير الذكي','addProduct':'إضافة جهاز','rawMaterials':'المواد الأولية','inventory':'المخزن والجرد','orders':'إدارة الطلبيات','returns':'المرتجعات','payments':'التسديدات المالية','expenses':'المصروفات','agents':'الوكلاء','employees':'إدارة الموظفين', 'myTasks':'مهام التصنيع والفحص', 'actual_sales':'المبيعات الفعلية للمجهزين'}[id]; 
 
 
             
@@ -2012,6 +2112,11 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
             }
             let navSettings = document.getElementById('nav-settings');
             if(navSettings) navSettings.style.display = (currentUser && currentUser.perms && currentUser.perms.settings_v) ? 'flex' : 'none';
+            
+            // 🟢 التعديل الجديد: تحديث جدول المبيعات الفعلية تلقائياً
+            if(document.getElementById('actualSalesTbody')) {
+                loadActualSales();
+            }
         };
 
 // ==========================================
@@ -2082,28 +2187,122 @@ document.getElementById('adminProductsList').innerHTML = products.map(pr => `
         // ==========================================
         // نظام النسخ الاحتياطي الذكي (مباشر لسيرفر الـ DB والتليكرام)
         // ==========================================
-        async function exportBackup() {
-            toggleLoader(true);
-            try {
-                let res = await fetch(`${API_URL}/backup_db?_t=${new Date().getTime()}`);
-                if (!res.ok) throw new Error("فشل تحميل النسخة");
-                
-                // تحويل الاستجابة إلى ملف للتحميل
-                let blob = await res.blob();
-                let url = window.URL.createObjectURL(blob);
-                let a = document.createElement('a');
-                a.href = url;
-                a.download = `Fadak_Database_${getNow().replace(/[: \-]/g, "_")}.db`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
-                
-                showToast("تم التحميل! وتم إرسال نسخة للتليكرام بنجاح 🚀");
-            } catch(e) {
-                showToast("حدث خطأ أثناء تحميل النسخة!", "error");
+        function loadActualSales() {
+            let tbody = document.getElementById('actualSalesTbody');
+            let empFilter = document.getElementById('salesEmpFilter').value;
+            tbody.innerHTML = '';
+
+            let p = currentUser.perms || {};
+            let canPayMktg = p.actual_sales_pay || currentUser.username === 'admin';
+            let isAdmin = currentUser.username === 'admin';
+
+            // تحديث عناوين الجدول حسب الصلاحية
+            let theadRow = document.getElementById('actualSalesTheadRow');
+            if(theadRow) {
+                theadRow.innerHTML = `<th class="p-4">الطلبية والتاريخ</th><th class="p-4">الوكيل</th><th class="p-4">المُجهز (الموظف)</th><th class="p-4 text-center">صور الأجهزة</th>${canPayMktg ? '<th class="p-4 text-center bg-blue-50/50">عمولة التسويق (تسديد)</th>' : ''}`;
             }
-            toggleLoader(false);
+
+            if(document.getElementById('salesEmpFilter').options.length === 1) {
+                let emps = employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+                document.getElementById('salesEmpFilter').innerHTML += emps;
+            }
+
+            let filteredOrders = orders.filter(o => o.status === 'delivered' && o.prepared_by_id);
+            if(empFilter !== 'all') {
+                filteredOrders = filteredOrders.filter(o => String(o.prepared_by_id) === String(empFilter));
+            }
+
+            if(filteredOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${canPayMktg ? 5 : 4}" class="p-8 text-center text-slate-400 font-bold">لا توجد مبيعات فعلية مطابقة.</td></tr>`;
+                return;
+            }
+
+            filteredOrders.reverse().forEach(o => {
+                let imgsHtml = o.items.map(i => `<img src="${i.img}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 inline-block -ml-2 shadow-sm bg-white p-0.5">`).join('');
+                
+                // 🟢 حساب عمولة التسويق الافتراضية (سعر البيع - التكلفة الكلية) * نسبة التسويق
+                let defaultMktg = 0;
+                o.items.forEach(item => {
+                    let reqQty = item.delivered_qty || item.qty;
+                    let pr = products.find(px => String(px.id) === String(item.id)) || item;
+                    
+                    let matCost = 0;
+                    if(pr.recipe) {
+                        pr.recipe.forEach(r => { let raw = rawMaterials.find(x => String(x.id) === String(r.rawId)); if(raw) matCost += (raw.cost * r.qty); });
+                    }
+                    let mfgCost = pr.mfg_fee || 0;
+                    let testCost = pr.test_fee || 0;
+                    let transCost = Math.round(matCost * ((systemSettings.transport || 0) / 100));
+                    
+                    let baseCost = matCost + mfgCost + testCost + transCost; // التكلفة الكلية
+                    
+                    let mktgCost = Math.round((item.price - baseCost) * ((systemSettings.marketing || 0) / 100));
+                    if(mktgCost < 0) mktgCost = 0;
+                    
+                    defaultMktg += (mktgCost * reqQty);
+                });
+
+                // إذا كانت محفوظة مسبقاً نستخدمها، وإذا لا نستخدم الحساب الافتراضي
+                let mktgVal = o.mktg_commission !== undefined ? o.mktg_commission : defaultMktg;
+
+                // إنشاء خانة التسويق (تظهر فقط لأصحاب الصلاحية)
+                let mktgCol = '';
+                if(canPayMktg) {
+                    if(o.mktg_paid) {
+                        mktgCol = `<td class="p-4 text-center align-middle bg-blue-50/20"><div class="font-black text-blue-600 text-lg">${mktgVal.toLocaleString()}</div><span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-200 mt-1 inline-block shadow-sm">تم التسديد ✅</span></td>`;
+                    } else {
+                        mktgCol = `<td class="p-4 text-center align-middle bg-blue-50/20"><div class="flex flex-col gap-2 items-center"><input type="number" id="mktg_inp_${o.id}" value="${mktgVal}" class="w-24 p-2 border border-blue-200 rounded-lg text-center font-black text-blue-700 outline-none focus:border-blue-500 bg-white shadow-sm"><button onclick="payMarketingCommission(${o.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-3 py-2 rounded-lg transition shadow-md w-full">تأكيد التسديد</button></div></td>`;
+                    }
+                }
+
+                tbody.innerHTML += `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4 align-middle">
+                        <div class="font-black text-slate-800 text-sm">طلب #${o.id}</div>
+                        <div class="text-[10px] font-bold text-slate-400 mt-1">${o.prepared_date}</div>
+                    </td>
+                    <td class="p-4 font-black text-slate-700 align-middle">${o.agentName}</td>
+                    <td class="p-4 font-black text-blue-600 align-middle"><span class="bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">${o.prepared_by_name}</span></td>
+                    <td class="p-4 text-center flex justify-center py-5 align-middle">${imgsHtml}</td>
+                    ${mktgCol}
+                </tr>`;
+            });
+        }
+
+        async function savePrepPercent(orderId, val) {
+            let order = orders.find(o => String(o.id) === String(orderId));
+            if(order) {
+                order.prep_percent = parseFloat(val) || 0;
+                await saveDataBulk([{key: 'orders', data: orders}]);
+                showToast('تم حفظ أجر التجهيز بنجاح!');
+            }
+        }
+
+        // 🟢 دالة تسديد عمولة التسويق الجديدة
+        async function payMarketingCommission(orderId) {
+            let val = parseInt(document.getElementById(`mktg_inp_${orderId}`).value);
+            if(isNaN(val) || val < 0) return showToast('يرجى إدخال مبلغ صحيح', 'error');
+
+            if(confirm(`هل أنت متأكد من تسديد مبلغ ${val.toLocaleString()} د.ع كعمولة تسويق لهذه الطلبية؟\nسيتم خصم المبلغ من الصندوق وتسجيله في المصروفات فوراً.`)) {
+                let order = orders.find(o => String(o.id) === String(orderId));
+                if(order) {
+                    order.mktg_commission = val;
+                    order.mktg_paid = true;
+
+                    // إضافة المصروف وخصمه من الصندوق
+                    stats.cash = (stats.cash || 0) - val;
+                    expenses.push({
+                        id: Date.now(),
+                        note: `تسديد عمولة تسويق (لطلب #${order.id} - ${order.agentName})`,
+                        amount: val,
+                        date: getNow()
+                    });
+
+                    updateUI();
+                    await saveDataBulk([{key: 'orders', data: orders}, {key: 'expenses', data: expenses}, {key: 'stats', data: stats}]);
+                    showToast('تم تسديد عمولة التسويق بنجاح!');
+                }
+            }
         }
 
         async function importBackup(event) {
