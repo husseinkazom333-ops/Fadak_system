@@ -338,7 +338,9 @@ if (window.location.hostname === "localhost" || window.location.hostname === "12
         }
 
         function loadProducts() {
-            const c = document.getElementById('productsGrid'); c.innerHTML = ''; let visibleProducts = products.filter(p => !p.assignedTo || p.assignedTo === 'general' || p.assignedTo === String(agent.id));
+            const c = document.getElementById('productsGrid'); c.innerHTML = ''; 
+            // 🟢 التعديل هنا: الفلترة الذكية حسب (owner) بدل assignedTo
+            let visibleProducts = products.filter(p => !p.owner || p.owner === 'general' || String(p.owner) === String(agent.id));
             if(visibleProducts.length === 0) { c.innerHTML = '<div class="col-span-full text-center py-10"><div class="text-4xl mb-2 opacity-50">🛒</div><p class="text-slate-400 font-bold text-sm">المتجر فارغ حالياً.</p></div>'; return; }
             visibleProducts.forEach(p => { 
                 let displayPrice = p.price; if(p.customPrices && p.customPrices[String(agent.id)] !== undefined) { displayPrice = p.customPrices[String(agent.id)]; } 
